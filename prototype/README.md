@@ -54,7 +54,7 @@ Các nhánh khác nên thử:
 | 4 | Nhật ký **việc AI tự làm** (`yeu_cau_bang_chung`, `chuyen_truong_nhom`), cả hai bên đều thấy. Mỗi dòng có nút **Đính chính** hoặc **Yêu cầu phân lại**. | HAX **G9** (sửa sai dễ) | **Tự làm, có đường sửa** |
 | 5 | Nút "Nhờ nhân viên xem xét" luôn có. Hồ sơ chuyển đi kèm đủ bằng chứng, người dùng không phải kể lại. | PAIR Errors + Graceful failure · HAX G10 | Đường chuyển người |
 | 6 | Phía người bán: hạn 24 giờ, thông tin người mua đã che (N\*\*\*h, ẩn SĐT và địa chỉ), quá hạn không tự động thua, lời doạ không phải căn cứ. | PAIR Trust · rubric T4 #3, #4, #6 | — |
-| 7 | Thẻ duyệt của nhân viên: toàn bộ căn cứ, phần còn thiếu, **đề xuất của AI tách riêng khỏi quyết định**. Hộp xác nhận ghi hậu quả "khó đảo lại", có 3 ô kiểm và lý do bắt buộc. Sau khi duyệt thì nút bị khoá để không chạy lặp. | HAX **G16** (cho thấy hậu quả) | **Cần người duyệt** (`soan_hoan_tien`, `tu_choi_khieu_nai`) |
+| 7 | Thẻ duyệt của nhân viên: toàn bộ căn cứ, phần còn thiếu, **đề xuất của AI tách riêng khỏi quyết định**. Hộp xác nhận ghi hậu quả "khó đảo lại", có 3 ô kiểm và lý do bắt buộc. Sau khi duyệt thì nút bị khoá để không chạy lặp. Nút duyệt cũng khoá khi người bán chưa được nghe (chưa phản hồi và chưa hết 24 giờ). | HAX **G16** (cho thấy hậu quả) | **Cần người duyệt** (`soan_hoan_tien`, `tu_choi_khieu_nai`) |
 | 8 | `phat_shop` **không có nút** ở bất kỳ màn nào, chỉ có dòng giải thích và đường "ghi chú chuyển bộ phận chuyên trách". | — | **Cấm** |
 
 ### Quyết định về cách hiện

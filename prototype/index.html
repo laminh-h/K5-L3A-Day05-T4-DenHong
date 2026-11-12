@@ -285,7 +285,7 @@ function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 function userB(t){S.bChat.push({who:'me',t})}
 function aiB(t){S.bChat.push({who:'ai',t})}
 function sysB(t){S.bChat.push({who:'sys',t})}
-function userS(t){S.sChat.push({who:'me s',t})}
+function userS(t){S.sChat.push({who:'me s',t}); S.sellerHeard=true;} // người bán đã lên tiếng
 function aiS(t){S.sChat.push({who:'ai',t})}
 function setEv(id, st, label){const e=S.ev.find(x=>x.id===id); if(e){e.st=st; if(label) e.label=label;} else S.ev.push({id,label,src:'Người bán',st,side:'ban'});}
 function logTool(tool, text, fixId, money){
@@ -306,15 +306,27 @@ function toStaff(why, proposal, viaLead=true){
   if(viaLead) logTool('chuyen_truong_nhom', `chuyển hồ sơ để phân công nhân viên: ${why}`, 'transfer');
   else logTool('(nội bộ)', `đưa đề xuất vào hàng chờ duyệt của nhân viên: ${why}. Chưa gọi soan_hoan_tien`, null);
   aiB(`Hồ sơ đã được chuyển cho nhân viên xem xét (${why}). Chưa có quyết định hoàn tiền hoặc từ chối. Mục tiêu nhân viên xem trước ${fmt(S.staffDue)}.`);
-  aiS(`Hồ sơ đã được chuyển cho nhân viên xem xét (${why}). Phản hồi và bằng chứng của shop đã đi kèm hồ sơ.`);
+  aiS(`Hồ sơ đã được chuyển cho nhân viên xem xét (${why}). ` + (S.sellerHeard
+      ? 'Phản hồi và bằng chứng của shop đã đi kèm hồ sơ.'
+      : `Shop vẫn được gửi phản hồi trước ${fmt(S.sellerDue)}; nhân viên chưa quyết định trước khi shop được nghe.`));
   S.step = 3; S.bAct=[]; S.sAct=[];
+  if(!S.sellerHeard) S.sAct=[['Gửi phản hồi / bằng chứng cho nhân viên', sellerLateReply,'primary']];
 }
 function askHuman(side){
   if(S.step>=3){ (side==='b'?aiB:aiS)('Hồ sơ đang ở chỗ nhân viên rồi, không tạo hồ sơ trùng.'); render(); return; }
   if(side==='b') userB('Cho mình gặp nhân viên.'); else userS('Shop muốn nhân viên xem xét.');
+  // Chuyển người không được bỏ qua bước nghe người bán: nếu shop chưa được báo thì báo luôn
+  if(!S.sellerNotified) notifySeller('người mua báo hàng không đúng mô tả và yêu cầu nhân viên xem xét');
   toStaff(side==='b'?'người mua yêu cầu gặp nhân viên':'người bán yêu cầu nhân viên xem xét',
     {kind:'chua', text:'Chưa đủ căn cứ để đề xuất hoàn hay từ chối. Một bên yêu cầu người xem xét trước khi thu thập xong bằng chứng.', gaps:missing()});
   render();
+}
+function sellerLateReply(){
+  userS('Shop gửi phản hồi và bằng chứng cho nhân viên.');
+  setEv('sresp','gn','Shop: đã gửi phản hồi cho nhân viên');
+  aiS('Đã nhận và đính kèm vào hồ sơ cho nhân viên.');
+  aiB('Shop đã gửi phản hồi; nhân viên sẽ xem cả hai phía.');
+  S.sAct=[]; render();
 }
 function missing(){ return S.ev.filter(e=>e.st==='cc').map(e=>e.label); }
 function fix(id){
@@ -332,6 +344,7 @@ function fix(id){
 function tick(){
   S.now = addH(S.now, 24);
   if(S.step===2 && S.sellerDue && S.now>=S.sellerDue){
+    S.sellerHeard = true; // shop đã có đủ 24 giờ để phản hồi
     aiS('Đã quá hạn phản hồi 24 giờ. Hồ sơ được chuyển nhân viên đánh giá với thông tin hiện có. Shop vẫn có thể gửi bằng chứng cho nhân viên.');
     sysB('Shop chưa phản hồi sau 24 giờ. Việc shop im lặng không tự động có nghĩa bên nào thắng.');
     toStaff('shop quá hạn phản hồi', {kind: S.key==='K2'?'chua':'hoan',
@@ -339,7 +352,12 @@ function tick(){
             S.key==='K1' ? 'Mô tả lúc đặt 6 lít; ảnh nhãn nồi nhận được 5.0L; shop không phản hồi. Bằng chứng nghiêng về hàng không khớp mô tả lúc đặt.' :
             'Đơn ghi L, tem M, shop từng nhắn thừa nhận gửi nhầm; shop không phản hồi trong hạn.',
       gaps:['Phản hồi của shop (quá hạn)']});
-  } else if(S.step===3 && S.staffDue && S.now>=S.staffDue){
+  } else if(S.step===3 && !S.sellerHeard && S.sellerDue && S.now>=S.sellerDue){
+    S.sellerHeard = true; S.sAct=[];
+    aiS('Đã quá hạn phản hồi 24 giờ. Nhân viên sẽ quyết định với thông tin hiện có.');
+    sysB('Shop chưa phản hồi sau 24 giờ. Việc shop im lặng không tự động có nghĩa bên nào thắng.');
+  } else if(S.step===3 && !S.decision && !S.staffReminded && S.staffDue && S.now>=S.staffDue){
+    S.staffReminded = true;
     sysB('Hồ sơ đã quá mục tiêu 4 giờ chưa được xem. Đã báo trưởng nhóm phân công. Hồ sơ vẫn mở, không tự quyết.');
     aiS('Hồ sơ đang chậm hơn mục tiêu 4 giờ; đã nhắc trưởng nhóm. Chưa có quyết định.');
     logTool('chuyen_truong_nhom','nhắc trưởng nhóm: hồ sơ quá mục tiêu 4 giờ (một lần, không nhắc lặp)', null);
@@ -400,7 +418,7 @@ function k2JustTight(){
 function k2StillSend(){
   userB('Mình vẫn muốn gửi khiếu nại.');
   aiB('Đã gửi yêu cầu shop phản hồi. Chưa có quyết định hoàn tiền hay từ chối.');
-  notifySeller('người mua phản ánh áo size M mặc chật và yêu cầu trả hàng hoàn tiền. Đơn ghi M, tem áo ghi M');
+  notifySeller('người mua phản ánh áo size M mặc chật và yêu cầu trả hàng hoàn tiền. Đơn ghi M, tem áo ghi M; đây là thông tin cần đối chiếu, vui lòng kiểm tra bảng size/mô tả hiển thị lúc bán');
   S.bAct=[]; k2SellerActs(); render();
 }
 function k2SellerActs(){
@@ -626,6 +644,7 @@ function renderStaff(){
   }
   const kindTag = {hoan:'<span class="tag t-info">AI đề xuất: hoàn tiền</span>', tuchoi:'<span class="tag t-info">AI đề xuất: từ chối</span>', chua:'<span class="tag t-warn">AI: chưa đủ căn cứ, không đề xuất</span>'}[P.kind];
   const done = !!S.decision;
+  const block = done || !S.sellerHeard; // chưa nghe người bán thì chưa được quyết định tiền
   el.innerHTML = `
    <div class="box" data-mk="7"><span class="mk">7</span>
      <h3>Hồ sơ ${c.order} · ${c.item} · ${money(c.price)}</h3>
@@ -637,11 +656,12 @@ function renderStaff(){
        <span>Còn thiếu / mâu thuẫn</span><span>${P.gaps.length?P.gaps.join('; '):'Không'}</span></div>
      <div class="propose" style="margin-top:8px">${kindTag}<br>${P.text}<br><span class="note">Đây là đề xuất của AI, không phải quyết định. Không có % tự tin, chỉ có căn cứ ở trên.</span></div>
      <div class="actions" style="margin-top:8px">
-       <button class="staff" ${done?'disabled':''} onclick="staffDecide('hoan')">Duyệt hoàn tiền…</button>
-       <button class="staff" ${done?'disabled':''} onclick="staffDecide('tuchoi')">Duyệt từ chối…</button>
+       <button class="staff" ${block?'disabled':''} onclick="staffDecide('hoan')">Duyệt hoàn tiền…</button>
+       <button class="staff" ${block?'disabled':''} onclick="staffDecide('tuchoi')">Duyệt từ chối…</button>
        <button ${done||P.asked?'disabled':''} onclick="staffAskMore()">Yêu cầu bổ sung</button>
        ${S.key==='K1'?`<button ${done||P.special?'disabled':''} onclick="staffSpecial()">Ghi chú chuyển bộ phận chuyên trách</button>`:''}
      </div>
+     ${!done && !S.sellerHeard?`<div style="margin-top:8px"><span class="tag t-warn">Chưa thể duyệt</span> <span class="note">Người bán chưa phản hồi và chưa hết hạn 24 giờ (đến ${fmt(S.sellerDue)}). Hai bên phải được nghe trước khi quyết định tiền.</span></div>`:''}
      ${done?`<div style="margin-top:8px"><span class="tag t-ok">Đã quyết định một lần cho phiên bản hồ sơ này</span> <span class="note">Nút bị khoá để tránh thực hiện lặp.</span></div>`:''}
    </div>`+banned;
 }
