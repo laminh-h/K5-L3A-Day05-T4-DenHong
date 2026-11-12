@@ -1,15 +1,13 @@
-# Dàn ý bài nộp *(spec.md — nộp trước 23:59 ngày lab của lớp)*
+# Bài nộp LAB5 — T4 Thương mại điện tử · Nhóm Đen Hồng
 
-> Copy dàn ý này vào `spec.md` của nhóm. Đây **không** phải form để điền đủ ô: mỗi mục chỉ cần đủ **bằng chứng** và **lập luận** ghi bên dưới. Viết ngắn, gạch đầu dòng là được. Hướng dẫn từng chặng: `02-guide.md`. Cách chấm: `04-rubric.md`.
->
-> **Một quyết định = bốn ý:** đã cân nhắc phương án nào · chọn phương án nào · vì sao · loại các phương án kia vì sao. Bằng chứng = lập luận trỏ về một chỗ cụ thể: tool nào, dòng dữ liệu nào của track, điều gì trong mục "Sản phẩm thật hôm nay", chỗ nào trên prototype (ảnh đánh số). Không chạy agent.
+Lớp: H210 · Bàn / zone: Cam · Track: T4
 
-```markdown
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| Nguyễn Thị Thanh Thúy | 2A202603523 | Viết kịch bản |
-| [Điền thành viên 2] | [Điền mã] | [Điền phần việc đã làm] |
-| [Điền thành viên 3] | [Điền mã] | [Điền phần việc đã làm] |
+| Nguyễn Thị Thanh Thúy | 2A202603523 | §1–2: lát cắt, phạm vi và kịch bản rủi ro |
+| Hoàng Lam Minh | 2A202603566 | §3: UX khi AI sai, câu phản hồi, thông báo và nguyên tắc HAX/PAIR |
+| Nguyễn Thị Hồng San | 2A202603513 | §5 và prototype: xây dựng giao diện, luồng tương tác, dữ liệu dựng và ảnh minh hoạ |
+| Đinh Thị Hường | 2A202603569 | §4: mức tự chủ của 5 tool, cơ chế duyệt; §6: kiểm thử prototype và kết quả Pass/Fail |
 
 ## §1. Lát cắt & phạm vi
 
@@ -79,16 +77,79 @@
 
 **Lỗi câu chữ không tự cứu được:** nếu hệ thống không có snapshot lúc đặt mà vẫn nói “mô tả lúc mua là 5L”, hoặc đã gọi nhầm thao tác chuyển tiền, thêm câu xin lỗi không sửa được nguồn sai hay giao dịch. Thiết kế phải đánh dấu thiếu snapshot, chặn nút quyết định tiền cho tới khi người có thẩm quyền duyệt và chuyển người xử lý; giao dịch đã chạy thì báo rõ sự thật, không hứa hoàn tác.
 
-## §4. Mức tự chủ  (chặng 4)
-Với mỗi tool:
-- Mức của nhóm (tự làm / cần người duyệt / cấm). Nếu cần người duyệt: ai duyệt · người duyệt thấy gì · quá hạn thì sao.
-- Lý do theo cost-of-error: sai thì ai chịu gì · đảo lại được không · chờ người thì mất gì.
-- Phương án đã cân nhắc và vì sao loại.
-Thêm:
-- Tool khó xếp nhất: mỗi người từng chọn gì, cái giá của mỗi phía (trỏ về kịch bản ở §2), nhóm chốt thế nào.
-- Thử mức đã đặt trên 2 kịch bản đắt nhất + 1 kịch bản bình thường: cái sai có bị chặn không? còn việc nào làm khi lẽ ra phải hỏi? người dùng bình thường có phải chờ vô ích không?
-- Luật thêm hoặc tool tách bước (nếu có), và vì sao.
-- Một mức tự chủ đã đổi lời hứa nào với người dùng.
+## §4. Mức tự chủ — phần Đinh Thị Hường
+
+### 4.1. Nguyên tắc và giới hạn
+
+AI được thu thập bằng chứng và chuyển hồ sơ, nhưng không tự quyết định ai mất tiền. Hoàn tiền và từ chối đều cần nhân viên xử lý khiếu nại duyệt; xử phạt shop nằm ngoài quyền của trợ lý này.
+
+- So sánh hàng nhận với **mô tả tại thời điểm đặt hàng**, không lấy mô tả hiện tại thay thế. Thiếu bản lúc mua thì nói rõ thiếu và chuyển người, không suy đoán.
+- Người bán được phản hồi trước khi nhân viên quyết định. Lời doạ bóc phốt, lịch sử một bên hoặc im lặng không tự tạo thành kết luận thắng/thua.
+- Không trao đổi số điện thoại, địa chỉ giữa hai bên. Nhân viên chỉ thấy dữ liệu cần xử lý, thông tin nhạy cảm được che.
+- Track không cấp tool tra cứu đơn hay lấy lịch sử mô tả. Prototype dùng hồ sơ giả nạp sẵn; bản thật cần nguồn lưu phiên bản đáng tin cậy. Không giả định AI tự khôi phục được bản mô tả đã mất.
+
+### 4.2. Quyền của từng tool và cái giá khi sai
+
+| Tool theo đề | Mức nhóm đề xuất | Sai thì ai chịu gì; có đảo được không? | Vì sao chọn; phương án bị loại; cái giá khi chờ |
+|---|---|---|---|
+| `yeu_cau_bang_chung` | **Tự làm có điều kiện** | Hỏi sai làm hai bên mất công, có thể lỡ hạn; tin đã gửi không thu hồi được. Có thể gửi đính chính nhưng không xoá tác động của tin cũ. | Cho tự gửi mẫu trung lập, chỉ xin đúng phần đang thiếu sau khi xác định đúng đơn và kiểm tra tài liệu đã có. Loại duyệt mọi tin vì làm ca đơn giản chờ vô ích; loại gửi tự do vì dễ hỏi lặp hoặc đòi dữ liệu riêng tư. Tin mơ hồ chưa xác định được đơn thì chỉ hỏi làm rõ trong chat, chưa gửi yêu cầu sang người bán. |
+| `chuyen_truong_nhom` | **Tự làm có điều kiện** | Chuyển nhầm gây thêm hàng chờ và nhân viên mất thời gian; có thể phân lại hồ sơ, nhưng thời gian đã mất không lấy lại được. | Tự chuyển khi mô tả thay đổi, bằng chứng mâu thuẫn/thiếu nguồn gốc, người dùng yêu cầu gặp người hoặc có dấu hiệu ngoài thẩm quyền. Loại chờ duyệt việc chuyển vì tăng một bước trước khi người có quyền nhận hồ sơ; loại chuyển mọi ca vì ca áo gửi nhầm rõ ràng có thể được hướng dẫn ngay. Không tạo hồ sơ trùng. |
+| `soan_hoan_tien` | **Cần người duyệt: nhân viên xử lý khiếu nại được phân quyền** | Theo đề, tool này **thực hiện hoàn tiền**, dù tên có chữ “soạn”. Hoàn sai khiến người bán mất tiền, có thể cả hàng; khó đảo khi tiền đã về người mua. | AI chỉ chuẩn bị đề xuất; nhân viên duyệt giao dịch cụ thể sau khi đủ điều kiện. Loại AI tự hoàn dù khách nói rất chắc vì ca K2 người bán có thể đúng. Loại cấm hoàn trong mọi ca vì người mua K1 có thể bị giữ tiền oan. Chờ duyệt làm hoàn tiền chậm hơn, nên hiển thị trạng thái và chuyển hồ sơ sớm. |
+| `tu_choi_khieu_nai` | **Cần người duyệt: nhân viên xử lý khiếu nại được phân quyền** | Đóng sai làm người mua mất cơ hội giải quyết và tiền về người bán; khó đảo. K1 có thể bị từ chối oan nếu dùng mô tả đã sửa. | Nhân viên kiểm tra bản mô tả lúc mua, phản hồi hai bên và lý do trước khi duyệt. Loại AI tự từ chối theo tem hoặc im lặng vì tem chưa đủ chứng minh toàn bộ đặc tính, im lặng chưa chứng minh sai. Loại không bao giờ từ chối vì K2 cần bảo vệ người bán đúng. Chờ duyệt kéo dài tranh chấp nhưng tránh đóng hồ sơ bằng suy đoán. |
+| `phat_shop` | **Cấm đối với trợ lý trong luồng này** | Trừ điểm/khoá nhầm ảnh hưởng doanh thu và uy tín cả shop; khó khôi phục hoàn toàn. | Luồng hàng sai mô tả không đủ thẩm quyền kết luận gian lận. Loại tự phạt theo yêu cầu khách; cũng loại thêm nút “duyệt phạt” ngay trong prototype vì cần quy trình chuyên trách khác. Chuyển trưởng nhóm để phân tuyến, không hứa mức phạt. Chậm xử phạt có giá, nhưng không biện minh cho phạt khi thiếu xác minh. |
+
+### 4.3. Điều kiện và cơ chế duyệt
+
+**Chính sách dựng của nhóm để demo, không phải chính sách Shopee:** hạn gửi yêu cầu là 7 ngày từ lúc nhận hàng; người bán có 24 giờ từ lúc được thông báo để phản hồi; mục tiêu nhân viên xem hồ sơ là 4 giờ từ lúc chuyển. Hệ thống hiển thị thời điểm cụ thể. Nhóm phải dùng các mốc này thống nhất trong spec và prototype.
+
+Yêu cầu gửi thành công trong hạn được ghi nhận thời điểm tiếp nhận; chờ bằng chứng, phản hồi hoặc nhân viên không làm mất thời điểm này. Mốc 24 giờ và 4 giờ là mốc xử lý, **không phải điều kiện tự động hoàn hay tự động từ chối**. Ngoại lệ quá hạn được chuyển nhân viên xem xét, AI không hứa được chấp nhận.
+
+**Vai trò:** `chuyen_truong_nhom` đưa hồ sơ tới **trưởng nhóm**, người phân công hồ sơ cho một **nhân viên xử lý khiếu nại được phân quyền**. Nhân viên này là người bấm duyệt hoàn tiền hoặc từ chối. Trưởng nhóm chỉ nhận nhắc khi hồ sơ quá mục tiêu 4 giờ chưa có người xem.
+
+**Người duyệt thấy:** mã đơn, mặt hàng/số tiền, mốc giao và tiếp nhận, mô tả lúc mua cùng thời điểm/nguồn lưu, mô tả hiện tại để đối chiếu, bằng chứng và phản hồi của cả hai bên, phần còn thiếu hoặc mâu thuẫn, hạn phản hồi, đề xuất AI và hậu quả của hành động. Không hiển thị phần trăm tự tin không có căn cứ.
+
+**Điều kiện trước khi duyệt hoàn hoặc từ chối:** đúng đơn; xác định được nguồn mô tả lúc mua; đã mời người bán phản hồi và nhận được phản hồi hoặc hết hạn; có đủ căn cứ cho quyết định cụ thể. Nếu vẫn thiếu căn cứ, nhân viên yêu cầu bổ sung hoặc chuyển trưởng nhóm, không bấm quyết định cho xong.
+
+**Khi duyệt:** nhân viên chọn quyết định, nhập lý do, kiểm tra đúng người nhận/số tiền nếu hoàn rồi xác nhận hậu quả trước khi hệ thống gọi tool. Người mua bấm “Gửi yêu cầu” chỉ là gửi khiếu nại, không thay thế phê duyệt tài chính. Nếu hồ sơ/bằng chứng thay đổi, đề xuất cũ phải được xem và duyệt lại.
+
+**Quá hạn:** sau 24 giờ chưa có phản hồi thì nhắc người bán và đưa hồ sơ cho nhân viên đánh giá; sau mục tiêu 4 giờ chưa được xem thì báo chậm cho người mua và người bán, nhắc trưởng nhóm phân công. Hồ sơ tiếp tục mở, không tự gọi hai tool quyết định tiền. Không gửi nhắc lặp liên tục.
+
+**Chống thực hiện nhầm:** nút duyệt chỉ có ở vai nhân viên; backend phải kiểm quyền và điều kiện, không chỉ ẩn nút. Một quyết định chỉ được thực hiện một lần cho một phiên bản hồ sơ; không cho vừa hoàn vừa từ chối. Khi tool lỗi hoặc chưa rõ kết quả, kiểm tra trạng thái trước khi thử lại. Không hiện nút hoàn tác giả cho giao dịch khó đảo.
+
+### 4.4. Tool khó xếp nhất: `soan_hoan_tien`
+
+| Phương án đã cân nhắc | Lợi ích | Cái giá theo kịch bản |
+|---|---|---|
+| AI tự hoàn khi cho là bằng chứng rõ | Người mua nhận tiền nhanh | K2: có thể chiều lời doạ, hoàn oan dù shop giao đúng; tiền khó thu hồi. |
+| Nhân viên duyệt giao dịch cụ thể — **chọn** | Kiểm tra hai phía trước khi tiền chuyển | K1 và K3 phải chờ quyết định tiền; giảm thời gian chờ bằng hồ sơ được chuẩn bị đầy đủ, không bắt khách kể lại. |
+| Cấm hoàn tiền hoàn toàn trong quy trình | Chặn AI làm mất tiền shop | K1: người mua có bằng chứng vẫn bị bế tắc; không giải quyết được công việc của tính năng. |
+
+Chốt cần người duyệt vì cả hoàn sai và không hoàn khi đáng hoàn đều gây thiệt hại. Không dùng mức tự tin của AI thay cho phê duyệt có bằng chứng.
+
+**Giới hạn ghi nhận thảo luận:** bài trình bày các phương án và lựa chọn thiết kế, chưa có ghi chép ý kiến ban đầu của từng thành viên nên không gán phương án cho từng người.
+
+### 4.5. Thử mức trên 2 ca khó + 1 ca thường
+
+Đây là kiểm tra logic thiết kế trên giấy; chưa xác nhận các nút hoặc rào chặn đã được lập trình.
+
+| Ca và dữ liệu giả | Luồng theo mức đã đặt | Sai có bị chặn không? | Còn hành động nào cần hỏi trước? | Có chờ vô ích không? |
+|---|---|---|---|---|
+| **K1 — Shop sửa mô tả:** bản lúc đặt ghi nồi 6 lít, bản hiện tại ghi 5 lít; khách báo nhận 5 lít. Hai phiên bản có mốc lưu. | Hiện hai phiên bản và chỗ lệch; nếu ảnh chưa đủ thì xin phần thiếu; báo người bán và tự chuyển trưởng nhóm. Nhân viên xem trước khi duyệt hoàn/từ chối. Nếu thiếu bản lúc mua thì ghi thiếu, không tự kết luận. | Chặn AI dùng bản hiện tại để tự từ chối hoặc chỉ theo lời khách để tự hoàn. | Khách xác định đúng đơn nếu chưa rõ; nhân viên phê duyệt giao dịch. Cấm phạt shop. | Có chờ xác minh nhưng cần thiết do bằng chứng có thay đổi; hồ sơ và thời điểm tiếp nhận được giữ. |
+| **K2 — Người bán đúng:** bản lúc đặt ghi áo M, tem nhận M; khách nói mặc chật và doạ bóc phốt. Không có bằng chứng sai đặc tính khác. | Nêu căn cứ khớp size; hỏi một câu làm rõ có điểm nào khác sai mô tả; cho người bán phản hồi. Nếu vẫn tranh chấp, chuyển trưởng nhóm; chỉ nhân viên được duyệt từ chối có lý do. | Chặn hoàn theo lời doạ và chặn AI đóng ngay chỉ vì tem khớp. Khớp size không tự chứng minh mọi đặc tính đều đúng. | Hỏi rõ điểm sai còn lại, không đoán khách chỉ đổi ý. Nhân viên duyệt nếu đóng. | Không tự chuyển chỉ vì một câu doạ; chuyển khi tranh chấp chưa giải quyết. Chờ quyết định đóng là cần thiết. |
+| **K3 — Gửi nhầm rõ ràng:** đơn ghi áo L, ảnh tem M, tin nhắn shop thừa nhận gửi nhầm; khách muốn trả hàng hoàn tiền. | Tự hướng dẫn gửi yêu cầu, tận dụng ảnh/tin nhắn đã có; xin đúng tài liệu còn thiếu nếu có. AI chuẩn bị đề xuất để nhân viên duyệt hoàn sau khi kiểm tra điều kiện trả hàng. | Không chuyển tiền trước duyệt; không đồng nhất shop thừa nhận gửi nhầm với đã hoàn tất điều kiện hoàn. | Khách xác nhận đúng đơn và gửi yêu cầu; nhân viên duyệt tiền. Không tự tạo thao tác trả hàng ngoài bộ tool. | Hướng dẫn và chuẩn bị hồ sơ ngay, không chờ nhân viên chỉ để biết bước tiếp theo. Vẫn phải chờ quyết định tài chính; đây là chi phí nhóm chấp nhận. |
+
+### 4.6. Tách bước và lời hứa với người dùng
+
+Tách **chuẩn bị đề xuất** khỏi **thực hiện quyết định**. Chuẩn bị là trạng thái nội bộ/mock mới do nhóm đề xuất, không đổi nghĩa tool gốc và không chuyển tiền. Nếu triển khai thật phải có nơi lưu đề xuất và kiểm quyền duyệt. Prototype không gọi tool thật.
+
+Lời hứa hiển thị cho người mua và người bán:
+
+> “AI giúp kiểm tra thông tin và chuẩn bị hồ sơ. Nhân viên sẽ xem bằng chứng của cả hai bên trước khi quyết định hoàn tiền hoặc đóng khiếu nại. Gửi yêu cầu không có nghĩa là đã được hoàn tiền.”
+
+Mức cần người duyệt làm lời hứa chuyển từ “xử lý tiền ngay” sang “cho biết bước tiếp theo và trạng thái xử lý”. Không hiển thị “đã hoàn” khi mới gửi đề xuất.
+
+
+**Đối chiếu với bài chính:** K1 trên prototype tương ứng kịch bản #2 ở §2; K2 (áo M) là biến thể cùng loại rủi ro người bán đúng của kịch bản #4 (nồi 5L); K3 tương ứng kịch bản #3. Các kết quả thử mức ở §4.5 là phân tích thiết kế; kết quả bấm thực tế trên bản 25b6918 và lỗi còn lại được ghi riêng tại §6. Chính sách 7 ngày / 24 giờ / 4 giờ là giả định của nhóm, không phải chính sách Shopee hay fixture được đề cấp sẵn.
 
 ## §5. Prototype
 
@@ -184,9 +245,37 @@ Thêm:
 - Kiểm quyền duyệt chỉ mô phỏng bằng giao diện. Bản thật phải kiểm quyền ở backend.
 - Bằng chứng bổ sung sau khi chuyển nhân viên (nút "📎 Nộp bổ sung") là dữ liệu dựng có sẵn, chưa tải ảnh thật.
 
-## §6. Tốt là gì  (chặng 6 — nhẹ, bỏ được nếu thiếu giờ)
-- 3 tiêu chí Pass/Fail chấm được; thiết kế của nhóm đạt tiêu chí nào trên 2 kịch bản đắt nhất; lỗi còn lại.
+## §6. Tốt là gì — kết quả kiểm thử thực tế
+### Ba tiêu chí Pass/Fail
+
+| Mã | Pass khi | Fail khi |
+|---|---|---|
+| **P1 — Đúng nguồn** | Hiện mô tả lúc mua cùng nguồn/mốc lưu; thiếu bản đó thì báo thiếu, không dùng bản hiện tại thay thế và khoá quyết định tiền. | Dùng nhầm bản hiện tại, bịa bản cũ hoặc cho quyết định khi thiếu nguồn đối chiếu. |
+| **P2 — Đúng quyền, đủ căn cứ** | Chưa có quyết định tiền trước khi nhân viên xác nhận; shop đã phản hồi/hết hạn; phần thiếu/mâu thuẫn bắt buộc đã xử lý; bằng chứng mới phải được xem lại; quyết định xong không chạy lặp. | Tự quyết tiền, duyệt khi thiếu căn cứ, dùng lại đề xuất chưa xem lại, hoặc mở quyết định lặp. |
+| **P3 — Có bước tiếp theo cho hai bên** | Hai bên thấy trạng thái/hạn/thông báo; vẫn nộp bổ sung/phản hồi được sau chuyển nhân viên; giữ thời điểm tiếp nhận và hồ sơ. | Xin bổ sung nhưng không có đường nộp, phản hồi bị mất sau chuyển/quá hạn, thông báo sai tình trạng hồ sơ. |
+
+### Kết quả trên hai ca đắt nhất
+
+| Ca | P1 | P2 | P3 |
+|---|---|---|---|
+| **K1 — Shop sửa mô tả** | **Pass:** bản lúc mua 6L và hiện tại 5L hiện riêng, có nguồn/mốc lưu. K4 bổ sung kiểm tra nhánh thiếu nguồn (bên dưới). | **Pass với các điều kiện UI đã thử:** sau shop phản hồi vẫn khoá khi thiếu ảnh nhãn; nộp ảnh xong vẫn khoá đến khi nhân viên xem lại; xác nhận hoàn xong hai nút tiền khoá. Chưa kiểm đầy đủ điều kiện trả hàng. | **Fail toàn ca:** nhánh chuyển sớm đã có nộp bổ sung; nhưng nhánh shop quá hạn vẫn nói shop có thể bổ sung mà không có nút phản hồi, còn thông báo nói phản hồi shop đã đi kèm dù shop im lặng. |
+| **K2 — Người bán đúng** | **Pass:** dùng bảng size lúc mua M/96 cm; lời doạ không phải căn cứ. | **Fail toàn ca:** đã khoá khi số đo 90/96 cm mâu thuẫn và bắt xem lại sau bổ sung, nhưng ảnh bổ sung 95 cm được coi là “trong sai số” để đề xuất từ chối/mở duyệt trong khi fixture và spec chưa quy định sai số. Nhánh chỉ mặc chật đi qua nhân viên xác nhận đúng, không tự đóng. | **Pass trong các nhánh đã thử:** có thông báo shop, hạn 24 giờ và nút nộp ảnh đo chính chiếc áo sau chuyển người; hai bên nhận kết quả đóng cùng lý do ở luồng chính. |
+
+### Thao tác đã thực hiện để tái hiện
+
+1. **K1 — gặp người sớm:** K1 → Nhờ nhân viên xem xét → shop gửi phản hồi cho nhân viên. Hai nút duyệt vẫn khoá vì thiếu ảnh nhãn (lỗi cũ đã sửa). Bấm Yêu cầu bổ sung: chỉ đòi ảnh thiếu, không đòi lại phản hồi shop. Bấm Nộp bổ sung ảnh nhãn: nút duyệt vẫn khoá. Bấm Xem lại đề xuất với bằng chứng mới: mới mở duyệt. Nhân viên mở hộp hoàn, tick 3 ô, nhập lý do, xác nhận: có kết quả mô phỏng; hai nút quyết định khoá để tránh lặp.
+2. **K2 — mâu thuẫn số đo:** K2 → Số đo thực tế khác bảng size (90 cm) → shop gửi ảnh áo cùng lô 96 cm → Vẫn muốn nhân viên xem xét. Cả hai nút duyệt khoá và nêu thiếu ảnh đo chính chiếc áo. Bấm Yêu cầu bổ sung → nộp ảnh đo mới (ngang 47,5 cm, vòng ngực khoảng 95 cm): vẫn khoá tới khi Xem lại đề xuất. Sau đó AI đề xuất từ chối vì “trong sai số”, mở nút duyệt: đây là căn cứ chưa được định nghĩa, cần sửa trước khi coi toàn ca đạt P2. Chưa xác nhận tiền/đóng tại nhánh mâu thuẫn này.
+3. **K2 — luồng chính người bán đúng:** Làm lại → Không có gì khác, chỉ là mặc chật → Vẫn gửi khiếu nại → shop gửi bảng size/ảnh → Vẫn muốn nhân viên xem xét. AI chỉ đề xuất từ chối. Nhân viên tick 3 ô, nhập lý do và xác nhận: hồ sơ đóng, hai bên nhận lý do, nút duyệt khoá. Không hoàn theo lời doạ.
+4. **K1 — shop im lặng:** K1 → Bổ sung ảnh nhãn → Tua 24 giờ. Chuyển nhân viên, không tự quyết tiền. Không còn nút phản hồi shop dù tin nói vẫn gửi được; tin chuyển còn khẳng định phản hồi đã đi kèm. Tua thêm hai lần: chỉ ghi một lần nhắc trưởng nhóm, không tự đóng/hoàn.
+5. **K4 — thiếu bản lúc mua (kiểm tra bổ sung P1):** chọn K4. Hiện thiếu bản lưu, không dùng trang hiện tại để kết luận, tự chuyển người và báo shop. Sau shop phản hồi và tua 24 giờ, hai nút tiền vẫn khoá. Bấm Chuyển tra cứu nguồn lưu mô tả: hồ sơ giữ mở và chưa có quyết định. **Đạt nhánh thiếu nguồn.**
+
+### Lỗi còn lại và giới hạn
+
+- **K2:** cần quy định sai số/cách đo có nguồn trong chính sách dựng, hoặc tiếp tục báo chưa đủ căn cứ thay vì tự coi 95 cm khớp 96 cm. Giữ số đo cũ trong lịch sử được, nhưng cần đánh dấu bản mới thay thế/làm rõ bản cũ.
+- **K1 quá hạn:** giữ đường gửi bằng chứng muộn, sửa thông báo theo việc shop có thực sự phản hồi hay chưa.
+- Đã xác nhận hai sửa đổi chính: chặn khi thiếu/mâu thuẫn và nộp bổ sung sau chuyển người. Tuy nhiên không đánh dấu toàn bộ Pass vì còn các nhánh lỗi trên.
+- Ảnh/bản mô tả và phần nộp bổ sung là fixture, không phải xác minh ảnh thật. Chưa kiểm thử đầy đủ điều kiện trả hàng trước hoàn, yêu cầu gửi sau 7 ngày, hay đồng thời nhiều người duyệt; bản thật cần kiểm quyền và chống lặp ở backend.
 
 ## §7. Demo
-- Ca lạ nhận được ở demo: prototype đã làm gì, và nhóm có đổi ý gì sau ca đó không.
-```
+
+Nhóm không được demo trong buổi lab, nên không có ca lạ hay phản hồi thực tế từ người xem để ghi nhận tại mục này. Các kết quả ở §6 là kiểm thử prototype, không phải kết quả demo trước lớp hoặc với TA. Prototype và hướng dẫn chạy được cung cấp ở §5 để người chấm có thể tự kiểm tra.
