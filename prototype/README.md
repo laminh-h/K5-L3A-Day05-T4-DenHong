@@ -34,7 +34,7 @@ Các nhánh khác nên thử:
 **File và công cụ:** `prototype/index.html`, một file HTML/JS thuần, dựng với sự hỗ trợ của coding agent (Claude).
 
 - **Phần mock:** toàn bộ dữ liệu đơn, mô tả, ảnh (hiện dưới dạng chữ `[Ảnh] …`), đồng hồ và các lời gọi tool. Tool chỉ được ghi vào nhật ký, không gọi thật.
-- **Lời nói của AI:** lấy từ `draft-ux.md`, viết sẵn theo từng ca. Ô ca lạ trả lời theo luật từ khoá cố định.
+- **Lời nói của AI:** viết sẵn theo từng ca, thiết kế UX được trình bày tại [spec.md §3](../spec.md). Ô ca lạ trả lời theo luật từ khoá cố định.
 - **Không có lời gọi AI thật**, nên không có API key.
 - **Chính sách dựng của nhóm, không phải chính sách Shopee:** 7 ngày để gửi yêu cầu, người bán có 24 giờ phản hồi, nhân viên xem hồ sơ trong 4 giờ.
 
@@ -63,7 +63,7 @@ Các nhánh khác nên thử:
 
 **1. Độ chắc: nhãn trạng thái từng bằng chứng (chọn)**
 - *Cách khác đã nghĩ tới:* thanh % tự tin, hoặc nhãn đèn xanh/đỏ "khả năng người mua đúng".
-- *Vì sao loại:* AI không có căn cứ để ra một con số (`draft-autonomy.md` §4.3), và % sẽ khiến nhân viên duyệt theo con số thay vì theo bằng chứng. Nhãn đèn xanh/đỏ thì nghiêng về một bên ngay trước khi người bán được nghe.
+- *Vì sao loại:* AI không có căn cứ để ra một con số (xem phần mức tự chủ trong [spec.md](../spec.md)), và % sẽ khiến nhân viên duyệt theo con số thay vì theo bằng chứng. Nhãn đèn xanh/đỏ thì nghiêng về một bên ngay trước khi người bán được nghe.
 - *Vì sao chọn:* nhãn từng bằng chứng trả lời đúng câu người mua hay hỏi: "mình còn thiếu cái gì".
 
 **2. Hai bản mô tả: đặt cạnh nhau (chọn)**
