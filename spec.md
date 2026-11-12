@@ -40,12 +40,44 @@
 - **Kịch bản suýt chọn:** đòi khóa shop vì nghi hàng giả. Hậu quả nghiêm trọng nhưng cách xử lý trong lát cắt khá rõ (không phạt, chuyển bộ phận chuyên trách); hai ca trên khó hơn vì có thể sai theo cả hai hướng dù từng bên đều có một phần bằng chứng.
 
 ## §3. Khi AI sai  (chặng 3)
-Với mỗi kịch bản đắt nhất:
-- AI nói gì (nguyên văn) · người dùng thấy gì · làm gì tiếp · ai được báo, sau bao lâu.
-- Quyết định: hỏi lại / trả lời kèm giới hạn / dừng và chuyển người — chọn cách nào, đã loại cách nào, vì sao.
-- Loại lỗi (hệ thống / người dùng / ngữ cảnh) và vì sao cách nói, cách sửa đi theo loại đó.
-- 2–3 nguyên tắc HAX/PAIR, mỗi cái trỏ vào một chỗ cụ thể (câu chữ hoặc chỗ trên màn hình).
-- Lỗi nào sửa câu chữ không cứu được (nếu có), và thiết kế cứu nó thế nào.
+**Quy ước chung:** prototype ghi rõ đây là trợ lý AI; hạn 7 ngày gửi yêu cầu, 24 giờ shop phản hồi và 4 giờ nhân viên xem là **chính sách dựng của prototype**, không phải chính sách Shopee. Hai bên thấy trạng thái và thời hạn áp dụng; không bên nào thấy số điện thoại/địa chỉ bên kia.
+
+### Ca #2 · Mô tả bị sửa sau khi bán (top 2)
+
+**AI nói với người mua (nguyên văn):**
+
+> “Mình là trợ lý AI. Đơn này lưu mô tả lúc đặt là ‘6L’; trang hiện tại ghi ‘5L’, và thông tin bạn nêu về tem sản phẩm cũng là ‘5L’. Các dữ liệu này khác nhau nhưng chưa đủ để kết luận sản phẩm giao sai mô tả — cần xác minh đúng phiên bản lúc đặt và nhãn/model của sản phẩm. Mình chưa hoàn tiền hay từ chối yêu cầu. Bạn có thể gửi ảnh rõ nhãn/model trên chiếc nồi đã nhận không? Mình sẽ gửi yêu cầu shop phản hồi để hai bên cùng được xem xét.”
+
+- **Người mua thấy:** thẻ đối chiếu mô tả lúc đặt và trang hiện tại, mỗi thẻ có nguồn/thời điểm; ảnh hoặc nhãn hàng được đánh dấu “đã ghi nhận, chưa xác minh”; trạng thái “chờ shop phản hồi — chưa có quyết định”. Đây là các vị trí ①–③ trong §5.
+- **Bước tiếp:** nút “Bổ sung ảnh nhãn/model”, “Xem bằng chứng đã gửi”, “Nhờ nhân viên xem xét”. Sau khi gửi, nhật ký xác nhận đã nhận; không bắt gửi lại ảnh đã có.
+- **AI nói với người bán (nguyên văn):**
+
+  > “Có yêu cầu xem xét đơn này. Hồ sơ lưu mô tả lúc đặt là ‘6L’; trang hiện tại ghi ‘5L’. Đây là khác biệt cần xác minh, chưa phải kết luận shop sai. Vui lòng kiểm tra đúng phiên bản/mẫu sản phẩm và gửi phản hồi hoặc bằng chứng liên quan trước hạn hiển thị. Không cần gửi thông tin liên hệ riêng của người mua.”
+
+- **Người bán thấy:** cùng phiên bản mô tả và thời điểm, lý do khiếu nại, bằng chứng liên quan được phép chia sẻ; tên người mua được che và không có số điện thoại/địa chỉ. Có nút “Phản hồi/gửi bằng chứng”; hạn phản hồi 24 giờ theo chính sách dựng.
+- **Thông báo:** `yeu_cau_bang_chung` gửi yêu cầu phản hồi cho shop; khi shop trả lời, người mua được báo và thấy phản hồi trong hồ sơ. Nếu không truy xuất được snapshot lúc đặt, hai bên đưa ra bằng chứng mâu thuẫn, hoặc một bên yêu cầu xem xét, `chuyen_truong_nhom` chuyển hồ sơ cho nhân viên; nhân viên nhận hồ sơ cùng bằng chứng và phần còn thiếu, mục tiêu phản hồi trong 4 giờ theo chính sách dựng. Quá hạn phản hồi của shop không tự động xử shop thua.
+- **Lựa chọn:** chọn đối chiếu hai phiên bản, xin bằng chứng còn thiếu và nghe shop trước khi quyết. Không tự từ chối dựa trên trang hiện tại vì có thể dùng sai nguồn sự thật; không tự hoàn tiền chỉ vì 6L và 5L khác nhau vì có thể chưa cùng cách đo/định nghĩa dung tích; không chuyển mọi ca ngay lập tức vì yêu cầu bằng chứng có thể giải quyết ca rõ ràng mà không làm người dùng chờ.
+- **Loại lỗi:** lỗi nguồn/hệ thống nếu AI lấy trang hiện tại thay snapshot; lỗi ngữ cảnh nếu coi “dung tích 6L” và nhãn/đo “5L” là cùng một phép đo mà chưa xác minh. Câu chữ nói rõ điều gì đã biết và chưa biết; nếu snapshot thiếu hoặc mâu thuẫn, thiết kế dừng quyết định và chuyển người, không chỉ thêm lời xin lỗi.
+
+### Ca #4 · Người bán đúng theo dữ liệu hiện có (top 1)
+
+**AI nói với người mua (nguyên văn):**
+
+> “Mình là trợ lý AI. Đơn và mô tả lưu tại thời điểm mua đều ghi ‘5L’; thông tin nhãn bạn nêu cũng ghi ‘5L’. Hiện mình chưa thấy điểm nào không khớp trong các dữ liệu này, nhưng mình chưa từ chối yêu cầu. Bạn cho biết cụ thể phần nào của sản phẩm không đúng mô tả và gửi thêm bằng chứng nếu có nhé. Yêu cầu vẫn đang được xem xét; mình chưa hoàn tiền.”
+
+- **Người mua thấy:** đơn, snapshot mô tả lúc mua và nhãn hàng đặt cạnh nhau; từng mục có nguồn/trạng thái xác minh; nhãn “chưa thấy điểm lệch — cần bạn nói rõ vấn đề” thay vì kết luận người mua sai. Nút “Nêu điểm không khớp”, “Bổ sung bằng chứng”, “Nhờ nhân viên xem xét”.
+- **AI nói với người bán (nguyên văn):**
+
+  > “Người mua yêu cầu hoàn tiền cho đơn này. Hồ sơ hiện có ghi mô tả lúc đặt là ‘5L’ và nhãn sản phẩm cũng là ‘5L’; đây chưa phải quyết định cuối cùng. Vui lòng phản hồi nếu có thông tin liên quan trước hạn hiển thị. Lời đe doạ hoặc đánh giá của một bên không được dùng thay cho bằng chứng.”
+
+- **Người bán thấy:** lý do khiếu nại, dữ liệu đơn và bằng chứng cần thiết; phần nào chưa xác minh được được đánh dấu rõ. Có nút “Phản hồi/gửi bằng chứng”, hạn 24 giờ theo chính sách dựng; người mua được che thông tin liên hệ.
+- **Bước tiếp và thông báo:** AI hỏi người mua làm rõ điểm không khớp; đồng thời `yeu_cau_bang_chung` mời shop phản hồi. Khi một bên bổ sung hoặc shop trả lời, bên còn lại nhận thông báo trong hồ sơ. Nếu người mua vẫn yêu cầu quyết định, hai bên bất đồng hoặc có căn cứ mới mâu thuẫn, gọi `chuyen_truong_nhom`; nhân viên nhận toàn bộ lịch sử và bằng chứng, mục tiêu xem trong 4 giờ theo chính sách dựng. Không tự động từ chối khi hết hạn.
+- **Lựa chọn:** hỏi làm rõ và để hai bên phản hồi trước khi người có thẩm quyền quyết. Không gọi `tu_choi_khieu_nai` chỉ vì nhãn khớp — có thể còn sai lệch khác hoặc bằng chứng chưa đủ; không gọi `soan_hoan_tien` để chiều yêu cầu/đe doạ — tiền chuyển khó đảo lại và người bán chịu thiệt; không coi lời đe doạ bóc phốt là căn cứ. Cũng không chuyển ngay mọi trường hợp nếu một câu hỏi cụ thể có thể làm rõ nhanh.
+- **Loại lỗi:** đầu vào người mua chưa nêu rõ điểm sai là mơ hồ; việc AI kết luận người bán đúng chỉ từ một nhãn sẽ là lỗi ngữ cảnh. Vì vậy AI nêu chính xác dữ liệu đang khớp nhưng để mở khả năng người mua bổ sung; nếu đã gửi kết luận/đề xuất sai, người mua có “Đính chính/Yêu cầu phân lại”, nhân viên được báo và bên kia nhận cập nhật trạng thái.
+
+**Nguyên tắc HAX/PAIR gắn với prototype:** G2 — nhãn “đã xác minh/chưa xác minh/chưa có” trên từng bằng chứng (§5, số ②); G10 — câu hỏi cụ thể và không quyết khi thiếu căn cứ (hai ca trên); G11 + PAIR Explainability/Trust — hai bản mô tả có nguồn, thời điểm và nhật ký hành động (§5, số ①, ④); PAIR Errors + Graceful Failure — nút “Nhờ nhân viên xem xét”, chuyển kèm hồ sơ, không bắt kể lại (§5, số ⑤).
+
+**Lỗi câu chữ không tự cứu được:** nếu hệ thống không có snapshot lúc đặt mà vẫn nói “mô tả lúc mua là 5L”, hoặc đã gọi nhầm thao tác chuyển tiền, thêm câu xin lỗi không sửa được nguồn sai hay giao dịch. Thiết kế phải đánh dấu thiếu snapshot, chặn nút quyết định tiền cho tới khi người có thẩm quyền duyệt và chuyển người xử lý; giao dịch đã chạy thì báo rõ sự thật, không hứa hoàn tác.
 
 ## §4. Mức tự chủ  (chặng 4)
 Với mỗi tool:
