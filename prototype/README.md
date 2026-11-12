@@ -7,6 +7,7 @@
    - **K1 · Shop sửa mô tả**: lúc đặt ghi 6 lít, trang hiện tại ghi 5 lít.
    - **K2 · Người bán đúng**: đặt áo M, nhận đúng M, người mua doạ bóc phốt.
    - **K3 · Gửi nhầm size**: ca thường.
+   - **K4 · Thiếu bản lúc đặt**: không truy xuất được mô tả lúc đặt. AI không kết luận, chuyển nhân viên, nút duyệt bị khoá.
 3. Bấm các nút màu cam ở Màn 1 (người mua), rồi các nút ở Màn 2 (người bán). Khi hồ sơ tới vùng **Mô phỏng · Nhân viên**, bấm "Duyệt hoàn tiền…" hoặc "Duyệt từ chối…".
 4. Nút ở thanh trên:
    - **⏩ Tua 24 giờ**: xem trường hợp người bán quá hạn phản hồi, hoặc nhân viên quá mục tiêu 4 giờ.
@@ -24,7 +25,8 @@
 Các nhánh khác nên thử:
 
 - **K1, shop không phản hồi:** sau bước 2, bấm **⏩ Tua 24 giờ**. Hồ sơ chuyển cho nhân viên, nhưng shop không tự động thua.
-- **K1, hai bên mâu thuẫn:** ở bước 3, chọn **"Shop gửi đúng model 6L"**. AI không đề xuất hoàn hay từ chối.
+- **K1, hai bên mâu thuẫn:** ở bước 3, chọn **"Shop gửi đúng model 6L"**. AI không đề xuất hoàn hay từ chối, nút duyệt khoá. Người mua bấm **"📎 Nộp bổ sung: Ảnh serial…"**, nhân viên bấm **"Xem lại đề xuất với bằng chứng mới"**, rồi mới duyệt được.
+- **K1, gặp nhân viên ngay:** bấm **"🙋 Nhờ nhân viên xem xét"** trước khi bổ sung gì. Nút duyệt khoá vì còn thiếu ảnh nhãn và phản hồi shop. Người mua nộp bổ sung, shop gửi phản hồi, nhân viên xem lại đề xuất, rồi mới duyệt được.
 - **K2:** chọn "Không có gì khác, chỉ là mặc chật" → "Vẫn gửi khiếu nại" → shop gửi ảnh đo → "Vẫn muốn nhân viên xem xét". AI đề xuất **từ chối** kèm lý do, nhưng vẫn cần nhân viên duyệt.
 
 ## §5. Prototype (để ráp vào spec.md)
@@ -54,7 +56,7 @@ Các nhánh khác nên thử:
 | 4 | Nhật ký **việc AI tự làm** (`yeu_cau_bang_chung`, `chuyen_truong_nhom`), cả hai bên đều thấy. Mỗi dòng có nút **Đính chính** hoặc **Yêu cầu phân lại**. | HAX **G9** (sửa sai dễ) | **Tự làm, có đường sửa** |
 | 5 | Nút "Nhờ nhân viên xem xét" luôn có. Hồ sơ chuyển đi kèm đủ bằng chứng, người dùng không phải kể lại. | PAIR Errors + Graceful failure · HAX G10 | Đường chuyển người |
 | 6 | Phía người bán: hạn 24 giờ, thông tin người mua đã che (N\*\*\*h, ẩn SĐT và địa chỉ), quá hạn không tự động thua, lời doạ không phải căn cứ. | PAIR Trust · rubric T4 #3, #4, #6 | — |
-| 7 | Thẻ duyệt của nhân viên: toàn bộ căn cứ, phần còn thiếu, **đề xuất của AI tách riêng khỏi quyết định**. Hộp xác nhận ghi hậu quả "khó đảo lại", có 3 ô kiểm và lý do bắt buộc. Sau khi duyệt thì nút bị khoá để không chạy lặp. Nút duyệt cũng khoá khi người bán chưa được nghe (chưa phản hồi và chưa hết 24 giờ). | HAX **G16** (cho thấy hậu quả) | **Cần người duyệt** (`soan_hoan_tien`, `tu_choi_khieu_nai`) |
+| 7 | Thẻ duyệt của nhân viên: toàn bộ căn cứ, phần còn thiếu, **đề xuất của AI tách riêng khỏi quyết định**. Hộp xác nhận ghi hậu quả "khó đảo lại", có 3 ô kiểm và lý do bắt buộc. Nút duyệt **khoá** khi: người bán chưa được nghe (chưa phản hồi, chưa hết 24 giờ); còn thiếu hoặc mâu thuẫn bằng chứng; không có bản mô tả lúc đặt; hoặc có bằng chứng mới mà nhân viên chưa bấm "Xem lại đề xuất". Thẻ liệt kê lý do đang bị khoá. Điều kiện được kiểm cả trong hàm duyệt, không chỉ ẩn nút. Sau khi duyệt, nút khoá để không chạy lặp. | HAX **G16** (cho thấy hậu quả) | **Cần người duyệt** (`soan_hoan_tien`, `tu_choi_khieu_nai`) |
 | 8 | `phat_shop` **không có nút** ở bất kỳ màn nào, chỉ có dòng giải thích và đường "ghi chú chuyển bộ phận chuyên trách". | — | **Cấm** |
 
 ### Quyết định về cách hiện
@@ -92,7 +94,7 @@ Các nhánh khác nên thử:
 
 - **Ô ca lạ** chỉ nhận diện theo từ khoá, chưa phải AI thật. Tin không khớp từ khoá nào thì đi đường an toàn: hỏi lại, hoặc gợi ý chuyển nhân viên.
 - **Kiểm quyền duyệt** chỉ mô phỏng bằng giao diện. Bản thật phải kiểm quyền ở backend.
-- **Khi bằng chứng mới tới sau lúc đã có đề xuất**, prototype chưa bắt buộc nhân viên duyệt lại (`draft-autonomy.md` §4.3).
+- **Bằng chứng bổ sung** sau khi chuyển nhân viên (nút "📎 Nộp bổ sung") là dữ liệu dựng có sẵn, chưa tải ảnh thật.
 
 ## §7. Demo (điền sau buổi demo)
 

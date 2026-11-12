@@ -98,10 +98,11 @@ Thêm:
 - **Link chạy trực tiếp:** <https://raw.githack.com/laminh-h/K5-L3A-Day05-T4-DenHong/main/prototype/index.html> (cần repo công khai).
 - **Cách chạy và luồng demo:** [`prototype/README.md`](prototype/README.md).
 - **Công cụ:** một file HTML/JS thuần, dựng với sự hỗ trợ của coding agent (Claude).
-- **Ba ca bấm được** (chọn ở thanh trên cùng):
+- **Bốn ca bấm được** (chọn ở thanh trên cùng):
   - **K1 · Shop sửa mô tả:** kịch bản #2 ở §2. Lúc đặt ghi 6 lít, trang hiện tại ghi 5 lít, nhãn nồi nhận được ghi 5.0L.
   - **K2 · Người bán đúng:** đặt áo M, nhận đúng M, khách mặc chật và doạ bóc phốt. Cùng loại rủi ro "người bán đúng" với kịch bản #4 (top 1) ở §2; prototype dùng áo M để thêm cả lời doạ.
   - **K3 · Gửi nhầm size:** ca thường, kịch bản #3 ở §2.
+  - **K4 · Thiếu bản lúc đặt:** không truy xuất được mô tả lúc đặt, chỉ có trang hiện tại (750 ml). Dùng để kiểm tiêu chí P1: AI không kết luận, chuyển nhân viên, và không ai duyệt được tiền.
 - **Phần mock:**
   - dữ liệu đơn, mô tả lúc đặt và hiện tại, ảnh (hiện bằng chữ `[Ảnh] …`)
   - đồng hồ mô phỏng, có nút "⏩ Tua 24 giờ" để xem xử lý quá hạn
@@ -130,7 +131,7 @@ Thêm:
 | ④ | Nhật ký việc AI tự làm (`yeu_cau_bang_chung`, `chuyen_truong_nhom`). Cả hai bên đều thấy. Mỗi dòng có nút **✎ Đính chính** hoặc **↩ Yêu cầu phân lại**. | **G9** sửa sai dễ | **Tự làm, có đường sửa** |
 | ⑤ | Nút "🙋 Nhờ nhân viên xem xét" luôn có. Hồ sơ chuyển đi kèm đủ bằng chứng, người dùng không phải kể lại. | PAIR Errors + Graceful failure | Đường chuyển người |
 | ⑥ | Phía người bán: hạn phản hồi 24 giờ và thời gian còn lại; người mua hiện là N\*\*\*h, ẩn SĐT và địa chỉ; ghi rõ quá hạn không tự động thua và lời doạ không phải căn cứ. | PAIR Trust · rubric T4 #3, #4, #6 | — |
-| ⑦ | Thẻ duyệt của nhân viên: toàn bộ căn cứ, phần còn thiếu, **đề xuất của AI tách riêng** và ghi "không phải quyết định". Hộp xác nhận ghi hậu quả "khó đảo lại", 3 ô kiểm và lý do bắt buộc. Nút duyệt khoá khi người bán chưa được nghe, và khoá sau khi đã duyệt. | **G16** cho thấy hậu quả | **Cần người duyệt** (`soan_hoan_tien`, `tu_choi_khieu_nai`) |
+| ⑦ | Thẻ duyệt của nhân viên: toàn bộ căn cứ, phần còn thiếu, **đề xuất của AI tách riêng** và ghi "không phải quyết định". Hộp xác nhận ghi hậu quả "khó đảo lại", 3 ô kiểm và lý do bắt buộc. Nút duyệt **khoá** khi: người bán chưa được nghe (chưa phản hồi, chưa hết 24 giờ); còn thiếu hoặc mâu thuẫn bằng chứng; không có bản mô tả lúc đặt; hoặc có bằng chứng mới mà nhân viên chưa bấm "Xem lại đề xuất". Thẻ liệt kê lý do đang bị khoá. Điều kiện được kiểm cả trong hàm duyệt, không chỉ ẩn nút. Sau khi duyệt, nút khoá để không chạy lặp. | **G16** cho thấy hậu quả | **Cần người duyệt** (`soan_hoan_tien`, `tu_choi_khieu_nai`) |
 | ⑧ | `phat_shop` **không có nút** ở bất kỳ màn nào, chỉ có dòng giải thích và đường "ghi chú chuyển bộ phận chuyên trách". | — | **Cấm** |
 
 ### Quyết định về cách hiện
@@ -181,8 +182,7 @@ Thêm:
 **Giới hạn đã biết:**
 - Ô ca lạ chỉ nhận diện theo từ khoá, chưa phải AI thật.
 - Kiểm quyền duyệt chỉ mô phỏng bằng giao diện. Bản thật phải kiểm quyền ở backend.
-- Khi bằng chứng mới tới sau lúc đã có đề xuất, prototype chưa bắt nhân viên duyệt lại.
-- Chưa có màn riêng cho ca "thiếu snapshot mô tả lúc đặt".
+- Bằng chứng bổ sung sau khi chuyển nhân viên (nút "📎 Nộp bổ sung") là dữ liệu dựng có sẵn, chưa tải ảnh thật.
 
 ## §6. Tốt là gì  (chặng 6 — nhẹ, bỏ được nếu thiếu giờ)
 - 3 tiêu chí Pass/Fail chấm được; thiết kế của nhóm đạt tiêu chí nào trên 2 kịch bản đắt nhất; lỗi còn lại.

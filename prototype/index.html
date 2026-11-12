@@ -249,7 +249,35 @@ const CASES = {
     ],
     aiFirst:'Mình thấy đơn ghi size L, ảnh tem bạn gửi là size M, và shop đã nhắn xác nhận gửi nhầm. Hồ sơ đã đủ để gửi yêu cầu trả hàng hoàn tiền, bạn không cần gửi lại ảnh.\n\nBước tiếp theo: bấm “Gửi yêu cầu trả hàng hoàn tiền”. Shop có 24 giờ để phản hồi, sau đó nhân viên duyệt hoàn tiền. Gửi yêu cầu chưa có nghĩa là đã được hoàn tiền.',
     firstAsk:null,
+  },
+  K4:{
+    label:'K4 · Thiếu bản lúc đặt', order:'DH-2611-0603', item:'Bình giữ nhiệt (mẫu C)', price:259000,
+    ordered:new Date(2026,10,5,12,30), received:new Date(2026,10,10,10,0),
+    atOrder:null, // không truy xuất được bản mô tả lúc đặt
+    current:{text:'Dung tích 750 ml', src:'Trang sản phẩm hiện tại'},
+    buyerMsg:'Bình ghi 1 lít mà mình nhận được bình 750 ml. Giờ vào trang lại thấy ghi 750 ml.',
+    ev:[
+      {id:'snap',label:'Bản mô tả lúc đặt (không truy xuất được)',src:'Đơn hàng',st:'cc',side:'sys'},
+      {id:'tag',label:'Ảnh nhãn bình: 750 ml',src:'Người mua gửi',st:'gn',side:'mua'},
+      {id:'sresp',label:'Phản hồi của shop',src:'Người bán',st:'cc',side:'ban'},
+    ],
+    aiFirst:'Mình chưa truy xuất được mô tả tại thời điểm bạn đặt hàng, chỉ thấy trang hiện tại ghi 750 ml. Mình sẽ không dùng trang hiện tại để kết luận, vì shop có thể đã sửa sau khi bán.\n\nMình đã chuyển hồ sơ cho nhân viên kiểm tra nguồn lưu và báo shop phản hồi. Chưa có quyết định hoàn tiền hay từ chối. Ảnh nhãn bạn gửi đã có trong hồ sơ, không cần gửi lại.',
+    firstAsk:null,
   }
+};
+/* Bằng chứng bổ sung sau khi hồ sơ đã tới nhân viên (dữ liệu dựng) và đề xuất mới sau khi xem lại */
+const SUPPLY = {
+  model:{label:'Ảnh nhãn/model: Model AF-50 · 5.0L', msg:'[Ảnh] Nhãn trên thân nồi: Model AF-50 · 5.0L',
+    kind:'hoan', text:'Mô tả lúc đặt ghi 6 lít; nhãn nồi nhận được ghi 5.0L. Hàng không khớp mô tả lúc đặt.'},
+  serial:{label:'Ảnh serial AF50-2611-0094 (thuộc lô model 5L)', msg:'[Ảnh] Serial trên thân nồi: AF50-2611-0094',
+    kind:'hoan', text:'Serial trên nồi thuộc lô model 5L, trái với phiếu xuất kho shop gửi (AF-60). Mô tả lúc đặt ghi 6 lít: hàng không khớp mô tả lúc đặt.'},
+  measure2:{label:'Đo chính chiếc áo đã giao: vòng ngực ≈ 95 cm', msg:'[Ảnh] Đo chính chiếc áo, có thước: ngang ngực 47,5 cm',
+    kind:'tuchoi', text:'Đo chính chiếc áo đã giao ≈ 95 cm, trong sai số với bảng size lúc đặt (96 cm). Hàng khớp mô tả; lời doạ không phải căn cứ. Đề xuất từ chối, có lý do.'},
+  measure:{label:'Số đo người mua: vòng ngực ≈ 90 cm', msg:'[Ảnh] Đo ngang ngực áo: 45 cm (≈ 90 cm vòng ngực)',
+    kind:'chua', text:'Số đo người mua ≈ 90 cm khác bảng size lúc đặt (96 cm). Chưa đủ căn cứ: cần ảnh đo chính chiếc áo, có thước rõ.',
+    then:{id:'measure2', label:'Ảnh đo chính chiếc áo đã giao, có thước rõ'}},
+  tagpkg:{label:'Ảnh tem M kèm mã đơn trên bao bì', msg:'[Ảnh] Tem size M dán trên túi có mã đơn',
+    kind:'hoan', text:'Tem M kèm mã đơn trên bao bì xác nhận hàng giao khác đơn (size L). Đề xuất hoàn tiền.'},
 };
 
 /* ===================== TRẠNG THÁI ===================== */
@@ -266,6 +294,11 @@ function reset(key){
   if(key==='K1'){ S.verdict='chua'; S.bAct=[['Bổ sung ảnh nhãn/model', k1AddModel,'primary']]; }
   if(key==='K2'){ S.verdict='chua'; S.bAct=[['Số đo thực tế khác bảng size', k2Measure,'primary'],['Không có gì khác, chỉ là mặc chật', k2JustTight]]; }
   if(key==='K3'){ S.verdict='du'; S.step=0; S.bAct=[['Gửi yêu cầu trả hàng hoàn tiền', k3Submit,'primary']]; }
+  if(key==='K4'){ S.verdict='chua';
+    notifySeller('người mua báo bình nhận được 750 ml. Hệ thống chưa truy xuất được mô tả lúc đặt hàng nên chưa đối chiếu được. Nếu shop có bản mô tả hoặc ảnh trang sản phẩm lúc bán, vui lòng gửi kèm');
+    toStaff('không truy xuất được mô tả lúc đặt', {kind:'chua',
+      text:'Thiếu bản mô tả lúc đặt. AI không đề xuất hoàn hay từ chối và không dùng trang hiện tại thay thế.'});
+  }
   render();
 }
 
@@ -288,6 +321,7 @@ function sysB(t){S.bChat.push({who:'sys',t})}
 function userS(t){S.sChat.push({who:'me s',t}); S.sellerHeard=true;} // người bán đã lên tiếng
 function aiS(t){S.sChat.push({who:'ai',t})}
 function setEv(id, st, label){const e=S.ev.find(x=>x.id===id); if(e){e.st=st; if(label) e.label=label;} else S.ev.push({id,label,src:'Người bán',st,side:'ban'});}
+function needEv(id,label,side='mua'){ if(!S.ev.find(x=>x.id===id)) S.ev.push({id,label,src:side==='mua'?'Người mua':'Người bán',st:'cc',side}); }
 function logTool(tool, text, fixId, money){
   S.log.push({tool,text,at:new Date(S.now),fixId,money,fixed:false});
 }
@@ -303,14 +337,14 @@ function notifySeller(reason){
 function toStaff(why, proposal, viaLead=true){
   S.staffDue = addH(S.now, POLICY.staffHours);
   S.proposal = proposal;
+  (proposal.need||[]).forEach(n=>needEv(n.id,n.label));
   if(viaLead) logTool('chuyen_truong_nhom', `chuyển hồ sơ để phân công nhân viên: ${why}`, 'transfer');
   else logTool('(nội bộ)', `đưa đề xuất vào hàng chờ duyệt của nhân viên: ${why}. Chưa gọi soan_hoan_tien`, null);
   aiB(`Hồ sơ đã được chuyển cho nhân viên xem xét (${why}). Chưa có quyết định hoàn tiền hoặc từ chối. Mục tiêu nhân viên xem trước ${fmt(S.staffDue)}.`);
   aiS(`Hồ sơ đã được chuyển cho nhân viên xem xét (${why}). ` + (S.sellerHeard
       ? 'Phản hồi và bằng chứng của shop đã đi kèm hồ sơ.'
       : `Shop vẫn được gửi phản hồi trước ${fmt(S.sellerDue)}; nhân viên chưa quyết định trước khi shop được nghe.`));
-  S.step = 3; S.bAct=[]; S.sAct=[];
-  if(!S.sellerHeard) S.sAct=[['Gửi phản hồi / bằng chứng cho nhân viên', sellerLateReply,'primary']];
+  S.step = 3; S.bAct=[]; S.sAct=[]; // nút ở bước này do render() sinh theo phần còn thiếu
 }
 function askHuman(side){
   if(S.step>=3){ (side==='b'?aiB:aiS)('Hồ sơ đang ở chỗ nhân viên rồi, không tạo hồ sơ trùng.'); render(); return; }
@@ -318,7 +352,7 @@ function askHuman(side){
   // Chuyển người không được bỏ qua bước nghe người bán: nếu shop chưa được báo thì báo luôn
   if(!S.sellerNotified) notifySeller('người mua báo hàng không đúng mô tả và yêu cầu nhân viên xem xét');
   toStaff(side==='b'?'người mua yêu cầu gặp nhân viên':'người bán yêu cầu nhân viên xem xét',
-    {kind:'chua', text:'Chưa đủ căn cứ để đề xuất hoàn hay từ chối. Một bên yêu cầu người xem xét trước khi thu thập xong bằng chứng.', gaps:missing()});
+    {kind:'chua', text:'Chưa đủ căn cứ để đề xuất hoàn hay từ chối. Một bên yêu cầu người xem xét trước khi thu thập xong bằng chứng.'});
   render();
 }
 function sellerLateReply(){
@@ -326,6 +360,7 @@ function sellerLateReply(){
   setEv('sresp','gn','Shop: đã gửi phản hồi cho nhân viên');
   aiS('Đã nhận và đính kèm vào hồ sơ cho nhân viên.');
   aiB('Shop đã gửi phản hồi; nhân viên sẽ xem cả hai phía.');
+  if(S.proposal) S.proposal.stale=true;
   S.sAct=[]; render();
 }
 function missing(){ return S.ev.filter(e=>e.st==='cc').map(e=>e.label); }
@@ -345,15 +380,16 @@ function tick(){
   S.now = addH(S.now, 24);
   if(S.step===2 && S.sellerDue && S.now>=S.sellerDue){
     S.sellerHeard = true; // shop đã có đủ 24 giờ để phản hồi
+    setEv('sresp','qh','Shop không phản hồi trong 24 giờ');
     aiS('Đã quá hạn phản hồi 24 giờ. Hồ sơ được chuyển nhân viên đánh giá với thông tin hiện có. Shop vẫn có thể gửi bằng chứng cho nhân viên.');
     sysB('Shop chưa phản hồi sau 24 giờ. Việc shop im lặng không tự động có nghĩa bên nào thắng.');
     toStaff('shop quá hạn phản hồi', {kind: S.key==='K2'?'chua':'hoan',
       text: S.key==='K2' ? 'Shop chưa phản hồi, nhưng hàng vẫn khớp đơn và bảng size lúc đặt. Chưa đủ căn cứ để hoàn; cân nhắc thêm bằng chứng.' :
             S.key==='K1' ? 'Mô tả lúc đặt 6 lít; ảnh nhãn nồi nhận được 5.0L; shop không phản hồi. Bằng chứng nghiêng về hàng không khớp mô tả lúc đặt.' :
-            'Đơn ghi L, tem M, shop từng nhắn thừa nhận gửi nhầm; shop không phản hồi trong hạn.',
-      gaps:['Phản hồi của shop (quá hạn)']});
+            'Đơn ghi L, tem M, shop từng nhắn thừa nhận gửi nhầm; shop không phản hồi trong hạn.'});
   } else if(S.step===3 && !S.sellerHeard && S.sellerDue && S.now>=S.sellerDue){
     S.sellerHeard = true; S.sAct=[];
+    setEv('sresp','qh','Shop không phản hồi trong 24 giờ');
     aiS('Đã quá hạn phản hồi 24 giờ. Nhân viên sẽ quyết định với thông tin hiện có.');
     sysB('Shop chưa phản hồi sau 24 giờ. Việc shop im lặng không tự động có nghĩa bên nào thắng.');
   } else if(S.step===3 && !S.decision && !S.staffReminded && S.staffDue && S.now>=S.staffDue){
@@ -385,7 +421,7 @@ function k1SellerAdmit(){
   aiB('Shop đã phản hồi: shop xác nhận đơn này gửi model 5L và đã sửa mô tả sau ngày bạn đặt.');
   toStaff('mô tả đã thay đổi sau khi đặt', {kind:'hoan',
     text:'Mô tả lúc đặt ghi 6 lít; nhãn nồi nhận được 5.0L; shop xác nhận gửi model 5L. Bằng chứng hai bên khớp nhau: hàng không đúng mô tả lúc đặt.',
-    gaps:[]});
+});
   render();
 }
 function k1SellerDeny(){
@@ -395,7 +431,7 @@ function k1SellerDeny(){
   aiB('Shop phản hồi rằng đã gửi model 6L. Thông tin này khác với ảnh nhãn 5.0L của bạn, nên mình không tự kết luận.');
   toStaff('bằng chứng hai bên mâu thuẫn', {kind:'chua',
     text:'Mâu thuẫn: nhãn nồi do người mua chụp ghi 5.0L, còn phiếu xuất kho của shop ghi AF-60 (6L). AI không đề xuất hoàn hay từ chối.',
-    gaps:['Ảnh nhãn chụp rõ số serial', 'Đối chiếu serial với phiếu xuất kho']});
+    need:[{id:'serial', label:'Ảnh serial trên thân nồi, chụp rõ'}]});
   render();
 }
 
@@ -410,6 +446,7 @@ function k2Measure(){
 }
 function k2JustTight(){
   S.path='tight';
+  setEv('measure','kh','Số đo: người mua xác nhận không có điểm khác bảng size');
   userB('Không có gì khác, chỉ là mặc chật.');
   aiB('Cảm ơn bạn. Theo thông tin hiện có, áo đúng size M và khớp bảng size lúc đặt, nên hiện chưa đủ căn cứ cho khiếu nại “không đúng mô tả”. Mình không đóng yêu cầu của bạn.\nBạn có thể vẫn gửi khiếu nại (shop sẽ được hỏi ý kiến, nhân viên quyết định), bổ sung số đo nếu thấy khác bảng size, hoặc rút yêu cầu.');
   S.bAct=[['Vẫn gửi khiếu nại', k2StillSend,'primary'],['Bổ sung số đo', k2Measure],['Rút yêu cầu', buyerWithdraw]];
@@ -440,9 +477,9 @@ function k2Escalate(){
   const measure = S.path==='measure';
   toStaff('hai bên chưa thống nhất', measure ? {kind:'chua',
       text:'Số đo hai bên mâu thuẫn: người mua ≈ 90 cm, shop 96 cm (áo cùng lô, không phải chính áo đã giao). Chưa đủ căn cứ.',
-      gaps:['Ảnh đo chính chiếc áo đã giao, có thước rõ']} : {kind:'tuchoi',
+      need:[{id:'measure2', label:'Ảnh đo chính chiếc áo đã giao, có thước rõ'}]} : {kind:'tuchoi',
       text:'Hàng khớp đơn (size M), tem M, bảng size lúc đặt không đổi; người mua không nêu điểm sai mô tả nào. Lời doạ bóc phốt không phải căn cứ. Đề xuất từ chối, có lý do.',
-      gaps:[]});
+});
   render();
 }
 
@@ -467,7 +504,7 @@ function k3SellerDeny(){
   setEv('sresp','gn','Shop: gửi đúng size L (trái với tin nhắn trước)');
   aiS('Đã ghi nhận. Phản hồi này khác tin nhắn trước của shop nên hồ sơ được chuyển nhân viên.');
   toStaff('phản hồi của shop mâu thuẫn tin nhắn trước', {kind:'chua',
-    text:'Shop từng nhắn “gửi nhầm size” nhưng nay nói gửi đúng L; ảnh tem do người mua chụp ghi M.', gaps:['Ảnh tem kèm mã đơn trên bao bì']});
+    text:'Shop từng nhắn “gửi nhầm size” nhưng nay nói gửi đúng L; ảnh tem do người mua chụp ghi M.', need:[{id:'tagpkg', label:'Ảnh tem kèm mã đơn trên bao bì'}]});
   render();
 }
 function sellerAgree(){
@@ -476,7 +513,7 @@ function sellerAgree(){
   aiS('Đã ghi nhận. Hoàn tiền vẫn cần nhân viên duyệt; shop sẽ nhận thông báo kết quả.');
   aiB('Shop đã đồng ý nhận lại hàng.');
   toStaff('hai bên đồng thuận trả hàng hoàn tiền', {kind:'hoan',
-    text:'Hai bên đồng thuận: hàng giao khác đơn, shop đồng ý nhận lại. Đề xuất hoàn tiền.', gaps:[]}, false);
+    text:'Hai bên đồng thuận: hàng giao khác đơn, shop đồng ý nhận lại. Đề xuất hoàn tiền.'}, false);
   render();
 }
 function buyerWithdraw(){
@@ -516,6 +553,7 @@ function freeText(t){
 
 /* ===================== NHÂN VIÊN ===================== */
 function staffDecide(kind){
+  if(S.decision || blockReasons().length){ render(); return; } // chặn cả khi gọi thẳng hàm
   const c=S.c, P=S.proposal;
   const isRefund = kind==='hoan';
   openDlg(isRefund?'Duyệt hoàn tiền: soan_hoan_tien':'Duyệt từ chối: tu_choi_khieu_nai',
@@ -529,6 +567,7 @@ function staffDecide(kind){
      <label><input type="checkbox" class="chk"> Lời doạ hay lịch sử một bên không phải căn cứ của quyết định này</label>
      <label>Lý do (bắt buộc, gửi cho cả hai bên)<textarea id="reason"></textarea></label>`,
     isRefund?'Xác nhận hoàn tiền':'Xác nhận từ chối', ()=>{
+      if(S.decision || blockReasons().length){ render(); return; }
       const r=$('reason').value.trim();
       S.decision={kind, text:r};
       logTool(isRefund?'soan_hoan_tien':'tu_choi_khieu_nai', `nhân viên duyệt: ${r}. Đã thực hiện, không hoàn tác`, null, true);
@@ -543,11 +582,35 @@ function staffDecide(kind){
     }, true);
 }
 function staffAskMore(){
-  const g = (S.proposal&&S.proposal.gaps.length)? S.proposal.gaps.join(', ') : 'ảnh rõ hơn phần không khớp';
+  const g = missing().join(', ') || 'ảnh rõ hơn phần không khớp';
   logTool('yeu_cau_bang_chung', `nhân viên xin thêm: ${g}`, null);
   aiB(`Nhân viên cần thêm: ${g}. Hồ sơ vẫn mở, thời điểm ghi nhận ${fmt(S.recorded)} giữ nguyên.`);
   aiS(`Nhân viên có thể cần thêm thông tin từ shop: ${g}.`);
   S.proposal.asked=true; render();
+}
+function staffLookup(){
+  logTool('chuyen_truong_nhom','chuyển bộ phận dữ liệu tra cứu nguồn lưu bản mô tả lúc đặt. Hồ sơ vẫn mở, không quyết định tiền', null);
+  aiB('Nhân viên đã chuyển tra cứu bản mô tả lúc đặt. Hồ sơ vẫn mở; chưa có quyết định hoàn tiền hay từ chối.');
+  S.proposal.lookup=true; render();
+}
+function supply(id){
+  const sp = SUPPLY[id]; if(!sp) return;
+  userB(sp.msg);
+  setEv(id,'gn',sp.label);
+  if(sp.then) needEv(sp.then.id, sp.then.label);
+  logTool('(hồ sơ)', `người mua bổ sung cho nhân viên: ${sp.label}`, null);
+  aiB(`Đã nhận và đính kèm cho nhân viên: ${sp.label}. Thời điểm ghi nhận ${fmt(S.recorded)} giữ nguyên.`);
+  aiS(`Người mua đã bổ sung: ${sp.label}. Shop có thể xem trong hồ sơ.`);
+  if(S.proposal){ S.proposal.stale=true; S.proposal.lastSupply=id; S.proposal.asked=false; }
+  render();
+}
+function reviewProposal(){
+  const P=S.proposal, sp=SUPPLY[P.lastSupply]; P.stale=false;
+  const miss=missing();
+  if(miss.length){ P.kind='chua'; P.text='Vẫn còn thiếu hoặc mâu thuẫn: '+miss.join('; ')+'. AI không đề xuất.'; }
+  else if(sp){ P.kind=sp.kind; P.text=sp.text; }
+  logTool('(nội bộ)','AI cập nhật đề xuất theo bằng chứng mới; nhân viên đã xem lại', null);
+  render();
 }
 function staffSpecial(){
   logTool('chuyen_truong_nhom','nhân viên ghi chú chuyển bộ phận chuyên trách (nghi vấn sửa mô tả sau bán). Không gọi phat_shop', null);
@@ -569,9 +632,15 @@ $('dlgCancel').onclick=()=>$('dlg').close();
 $('dlgOk').onclick=()=>{ $('dlg').close(); const cb=dlgCb; dlgCb=null; cb&&cb(); };
 
 /* ===================== RENDER ===================== */
-const ST = {xm:['đã xác minh','t-ok'], gn:['đã ghi nhận, chưa xác minh','t-warn'], cc:['chưa có','t-mute']};
+const ST = {xm:['đã xác minh','t-ok'], gn:['đã ghi nhận, chưa xác minh','t-warn'], cc:['chưa có','t-mute'], qh:['quá hạn, đã đủ thời gian','t-mute'], kh:['không áp dụng','t-mute']};
 function cmpHtml(){
-  const c=S.c, diff = c.atOrder.text!==c.current.text;
+  const c=S.c;
+  if(!c.atOrder) return `<div class="cmp">
+     <div class="ver" style="border:2px solid var(--bad);background:var(--bad-soft)"><small>✖ LÚC ĐẶT HÀNG</small><b>Không truy xuất được</b><small>Chưa có bản lưu đáng tin cho đơn này</small></div>
+     <div class="ver"><small>Chỉ để tham khảo · HIỆN TẠI</small><b>${c.current.text}</b><small>${c.current.src}</small></div>
+   </div>
+   <div style="margin-top:6px"><span class="tag t-bad">Thiếu bản lúc đặt: không kết luận</span> <span class="note">Không dùng trang hiện tại thay thế; hồ sơ chuyển nhân viên.</span></div>`;
+  const diff = c.atOrder.text!==c.current.text;
   return `<div class="cmp">
      <div class="ver main"><small>✔ Dùng để đối chiếu · LÚC ĐẶT HÀNG</small><b>${c.atOrder.text}</b><small>${c.atOrder.src}</small></div>
      <div class="ver"><small>Chỉ để tham khảo · HIỆN TẠI</small><b>${c.current.text}</b><small>${c.current.src}</small></div>
@@ -616,8 +685,14 @@ function render(){
   $('bVerdict').innerHTML = verdictHtml();
   $('bChat').innerHTML = chatHtml(S.bChat); $('sChat').innerHTML = chatHtml(S.sChat, true);
   $('bChat').scrollTop=1e6; $('sChat').scrollTop=1e6;
-  btns(S.bAct, $('bAct'));
-  btns(S.sellerNotified ? S.sAct.concat(S.step===2?[['🙋 Nhờ nhân viên xem xét',()=>askHuman('s')]]:[]) : [], $('sAct'));
+  let bA=S.bAct, sA=S.sAct;
+  if(S.step===3 && !S.decision){
+    bA = S.ev.filter(e=>e.st==='cc' && e.side==='mua' && SUPPLY[e.id]).map(e=>['📎 Nộp bổ sung: '+e.label, ()=>supply(e.id), 'primary']);
+    const sr = S.ev.find(e=>e.id==='sresp');
+    sA = (sr && sr.st==='cc') ? [['Gửi phản hồi / bằng chứng cho nhân viên', sellerLateReply,'primary']] : [];
+  }
+  btns(bA, $('bAct'));
+  btns(S.sellerNotified ? sA.concat(S.step===2?[['🙋 Nhờ nhân viên xem xét',()=>askHuman('s')]]:[]) : [], $('sAct'));
   $('bHuman').disabled = S.step>=4;
   // seller head
   $('sHead').innerHTML = S.sellerNotified
@@ -635,6 +710,15 @@ function render(){
     : '<li class="empty" style="border:none">Chưa có.</li>';
   renderStaff();
 }
+// Điều kiện duyệt tiền (§4). Kiểm cả trong hàm duyệt, không chỉ ẩn nút.
+function blockReasons(){
+  const c=S.c, P=S.proposal||{}, r=[], miss=missing();
+  if(!S.sellerHeard) r.push(`Người bán chưa phản hồi và chưa hết hạn 24 giờ (đến ${fmt(S.sellerDue)}).`);
+  if(!c.atOrder) r.push('Không có bản mô tả lúc đặt: không đối chiếu được, không dùng trang hiện tại thay thế.');
+  if(miss.length) r.push(`Còn thiếu hoặc mâu thuẫn: ${miss.join('; ')}.`);
+  if(P.stale) r.push('Có bằng chứng mới sau đề xuất cũ: cần bấm “Xem lại đề xuất” trước.');
+  return r;
+}
 function renderStaff(){
   const el=$('staff'), P=S.proposal, c=S.c;
   const banned = `<div class="box" data-mk="8"><span class="mk">8</span><div class="banned">⛔ <b>Xử phạt / khoá shop (<code>phat_shop</code>)</b>: không có trong luồng này, cả với AI lẫn nhân viên khiếu nại. Nghi vấn gian lận thì ghi chú chuyển bộ phận chuyên trách.</div></div>`;
@@ -644,24 +728,28 @@ function renderStaff(){
   }
   const kindTag = {hoan:'<span class="tag t-info">AI đề xuất: hoàn tiền</span>', tuchoi:'<span class="tag t-info">AI đề xuất: từ chối</span>', chua:'<span class="tag t-warn">AI: chưa đủ căn cứ, không đề xuất</span>'}[P.kind];
   const done = !!S.decision;
-  const block = done || !S.sellerHeard; // chưa nghe người bán thì chưa được quyết định tiền
+  const miss = missing();
+  const reasons = blockReasons();
+  const block = done || reasons.length>0;
   el.innerHTML = `
    <div class="box" data-mk="7"><span class="mk">7</span>
      <h3>Hồ sơ ${c.order} · ${c.item} · ${money(c.price)}</h3>
      <div class="kv"><span>Đặt / nhận</span><span>${fmt(c.ordered)} / ${fmt(c.received)}</span>
        <span>Ghi nhận khiếu nại</span><span>${fmt(S.recorded)} (trong hạn 7 ngày)</span>
-       <span>Mô tả lúc đặt</span><span><b>${c.atOrder.text}</b> · ${c.atOrder.src}</span>
+       <span>Mô tả lúc đặt</span><span>${c.atOrder?`<b>${c.atOrder.text}</b> · ${c.atOrder.src}`:'<span class="tag t-bad">không truy xuất được</span>'}</span>
        <span>Mô tả hiện tại</span><span>${c.current.text} · ${c.current.src}</span>
        <span>Bằng chứng</span><span>${S.ev.map(e=>`${e.label} <span class="tag ${ST[e.st][1]}">${ST[e.st][0]}</span>`).join('<br>')}</span>
-       <span>Còn thiếu / mâu thuẫn</span><span>${P.gaps.length?P.gaps.join('; '):'Không'}</span></div>
-     <div class="propose" style="margin-top:8px">${kindTag}<br>${P.text}<br><span class="note">Đây là đề xuất của AI, không phải quyết định. Không có % tự tin, chỉ có căn cứ ở trên.</span></div>
+       <span>Còn thiếu / mâu thuẫn</span><span>${miss.length?miss.join('; '):'Không'}</span></div>
+     <div class="propose" style="margin-top:8px">${kindTag}${P.stale?' <span class="tag t-warn">có bằng chứng mới, đề xuất cũ cần xem lại</span>':''}<br>${P.text}<br><span class="note">Đây là đề xuất của AI, không phải quyết định. Không có % tự tin, chỉ có căn cứ ở trên.</span></div>
      <div class="actions" style="margin-top:8px">
        <button class="staff" ${block?'disabled':''} onclick="staffDecide('hoan')">Duyệt hoàn tiền…</button>
        <button class="staff" ${block?'disabled':''} onclick="staffDecide('tuchoi')">Duyệt từ chối…</button>
+       ${P.stale&&!done?`<button class="primary" onclick="reviewProposal()">Xem lại đề xuất với bằng chứng mới</button>`:''}
        <button ${done||P.asked?'disabled':''} onclick="staffAskMore()">Yêu cầu bổ sung</button>
+       ${!c.atOrder?`<button ${done||P.lookup?'disabled':''} onclick="staffLookup()">Chuyển tra cứu nguồn lưu mô tả</button>`:''}
        ${S.key==='K1'?`<button ${done||P.special?'disabled':''} onclick="staffSpecial()">Ghi chú chuyển bộ phận chuyên trách</button>`:''}
      </div>
-     ${!done && !S.sellerHeard?`<div style="margin-top:8px"><span class="tag t-warn">Chưa thể duyệt</span> <span class="note">Người bán chưa phản hồi và chưa hết hạn 24 giờ (đến ${fmt(S.sellerDue)}). Hai bên phải được nghe trước khi quyết định tiền.</span></div>`:''}
+     ${!done && reasons.length?`<div style="margin-top:8px"><span class="tag t-warn">Chưa thể duyệt</span><ul class="note" style="margin:4px 0 0;padding-left:18px">${reasons.map(r=>`<li>${r}</li>`).join('')}</ul></div>`:''}
      ${done?`<div style="margin-top:8px"><span class="tag t-ok">Đã quyết định một lần cho phiên bản hồ sơ này</span> <span class="note">Nút bị khoá để tránh thực hiện lặp.</span></div>`:''}
    </div>`+banned;
 }
