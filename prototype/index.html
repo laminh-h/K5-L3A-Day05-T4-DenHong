@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khiếu nại sai mô tả</title>
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#fff; --ink:#1d2330; --muted:#5f6b7a; --line:#dde1e7;
+  --accent:#d0451b; --accent-soft:#fdeee8;
+  --ok:#1f7a4d; --ok-soft:#e5f4ec;
+  --warn:#9a6200; --warn-soft:#fff4dc;
+  --bad:#b42318; --bad-soft:#fdecea;
+  --info:#1d5fae; --info-soft:#e8f0fb;
+  --staff:#5b3fa8; --staff-soft:#f0ebfb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0 8px 0 0}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+button{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+button:hover:not(:disabled){border-color:#9aa3ae}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.staff{background:var(--staff);border-color:var(--staff);color:#fff}
+button.link{border:none;background:none;color:var(--info);padding:2px 4px;text-decoration:underline}
+.clock{color:var(--muted);font-size:13px}
+.note{font-size:12px;color:var(--muted)}
+main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.screen{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.screen>h2{margin:0;padding:10px 14px;font-size:15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.screen.buyer>h2{background:var(--accent-soft)}
+.screen.seller>h2{background:var(--info-soft)}
+.screen.staffs{grid-column:1/-1}
+.screen.staffs>h2{background:var(--staff-soft)}
+.body{padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.box{border:1px solid var(--line);border-radius:10px;padding:10px 12px;position:relative}
+.box h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px}
+.kv span:nth-child(odd){color:var(--muted)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:480px){.cmp{grid-template-columns:1fr}}
+.ver{border-radius:8px;padding:8px;border:1px solid var(--line)}
+.ver.main{border:2px solid var(--ok);background:var(--ok-soft)}
+.ver b{display:block;font-size:15px}
+.ver small{color:var(--muted);display:block}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;font-weight:600;white-space:nowrap}
+.t-ok{background:var(--ok-soft);color:var(--ok)}
+.t-warn{background:var(--warn-soft);color:var(--warn)}
+.t-bad{background:var(--bad-soft);color:var(--bad)}
+.t-info{background:var(--info-soft);color:var(--info)}
+.t-mute{background:#eef0f3;color:var(--muted)}
+.ev{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.ev li{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.ev li:last-child{border-bottom:none}
+.steps{display:flex;gap:4px;flex-wrap:wrap}
+.steps span{font-size:12px;padding:3px 8px;border-radius:6px;background:#eef0f3;color:var(--muted)}
+.steps span.done{background:var(--ok-soft);color:var(--ok)}
+.steps span.cur{background:var(--ink);color:#fff}
+.deadline{font-size:13px;margin-top:6px}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding:4px 2px}
+.msg{max-width:88%;padding:8px 10px;border-radius:12px;white-space:pre-line}
+.msg.ai{background:#f1f3f6;align-self:flex-start;border-top-left-radius:2px}
+.msg.me{background:var(--accent);color:#fff;align-self:flex-end;border-top-right-radius:2px}
+.msg.me.s{background:var(--info)}
+.msg.sys{align-self:center;background:var(--warn-soft);color:var(--warn);font-size:12px;max-width:100%}
+.msg .who{font-size:11px;opacity:.7;display:block;margin-bottom:2px}
+.actions{display:flex;flex-wrap:wrap;gap:6px}
+.free{display:flex;gap:6px}
+.free input{flex:1;min-width:0;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.log{list-style:none;margin:0;padding:0;font-size:13px;display:flex;flex-direction:column;gap:6px}
+.log li{border-left:3px solid var(--info);padding-left:8px}
+.log li.money{border-left-color:var(--bad)}
+.log code{background:#eef0f3;padding:0 4px;border-radius:4px;font-size:12px}
+.banned{background:#fafafa;border:1px dashed #c4c9d0;border-radius:8px;padding:8px;font-size:12px;color:var(--muted)}
+.propose{background:var(--staff-soft);border-radius:8px;padding:8px 10px}
+.mk{position:absolute;top:-10px;right:-8px;background:#e11d48;color:#fff;font-weight:700;border-radius:999px;width:24px;height:24px;display:none;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 0 2px #fff;z-index:2}
+body.marks .mk{display:flex}
+body.marks .box[data-mk]{outline:2px solid #e11d48;outline-offset:1px}
+.legend{display:none;grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
+body.marks .legend{display:block}
+.legend ol{margin:4px 0 0;padding-left:20px}
+dialog{border:none;border-radius:12px;padding:0;max-width:520px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(20,24,32,.45)}
+dialog .dh{padding:12px 16px;background:var(--staff-soft);font-weight:700}
+dialog .db{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+dialog .df{padding:12px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line)}
+dialog textarea{font:inherit;width:100%;min-height:60px;border:1px solid var(--line);border-radius:8px;padding:6px}
+.conseq{background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:8px;font-size:13px}
+.empty{color:var(--muted);font-style:italic}
+</style>
+</head>
+<body>
+<header>
+  <h1>Trò chuyện với Shopee · Trợ lý khiếu nại “không đúng mô tả”</h1>
+  <div class="seg" id="caseSeg"></div>
+  <div class="seg">
+    <button id="btnReset" title="Bắt đầu lại ca đang chọn">↺ Làm lại</button>
+    <button id="btnTime" title="Mô phỏng thời gian trôi để xem xử lý quá hạn">⏩ Tua 24 giờ</button>
+    <button id="btnMarks" title="Hiện số chú thích dùng cho ảnh §5">① Số chú thích</button>
+  </div>
+  <span class="clock" id="clock"></span>
+  <span class="note">Dữ liệu dựng · chính sách dựng của nhóm (7 ngày / 24 giờ / 4 giờ), không phải chính sách Shopee · không gọi tool thật</span>
+</header>
+
+<main>
+  <div class="legend" id="legend">
+    <b>Chú thích số (khớp ảnh trong §5)</b>
+    <ol>
+      <li>Đối chiếu <b>mô tả lúc đặt</b> với mô tả hiện tại, kèm nguồn và thời điểm. HAX G11 (giải thích vì sao), rubric T4 #1.</li>
+      <li>Bằng chứng gắn nhãn “đã xác minh / đã ghi nhận / chưa có” và kết luận “chưa đủ căn cứ”. HAX G2, G10. Đây là cách hiện độ chắc.</li>
+      <li>Trạng thái hồ sơ, hạn 7 ngày và còn bao lâu. PAIR Mental model, rubric T4 #8.</li>
+      <li>Nhật ký việc AI <b>tự làm</b> (<code>yeu_cau_bang_chung</code>, <code>chuyen_truong_nhom</code>), có nút đính chính / phân lại. HAX G9 (sửa sai dễ). Mức: tự làm có đường sửa.</li>
+      <li>Đường chuyển người: “Nhờ nhân viên xem xét” luôn có. PAIR Errors + Graceful failure.</li>
+      <li>Phía người bán: hạn phản hồi 24 giờ, thông tin người mua đã che, lời doạ không phải căn cứ. Rubric T4 #3, #4, #6.</li>
+      <li>Thẻ duyệt của nhân viên: đề xuất của AI tách khỏi quyết định, hậu quả, xác nhận có lý do. HAX G16. Mức: cần người duyệt.</li>
+      <li>Việc cấm (<code>phat_shop</code>) không có nút, chỉ có đường chuyển bộ phận chuyên trách. Mức: cấm.</li>
+    </ol>
+  </div>
+
+  <!-- MÀN 1: NGƯỜI MUA -->
+  <section class="screen buyer">
+    <h2><span>Màn 1 · Người mua</span><span class="note" id="bOrderShort"></span></h2>
+    <div class="body">
+      <div class="box" data-mk="3"><span class="mk">3</span>
+        <h3>Trạng thái hồ sơ</h3>
+        <div class="steps" id="bSteps"></div>
+        <div class="deadline" id="bDeadline"></div>
+      </div>
+      <div class="box" data-mk="1"><span class="mk">1</span>
+        <h3>Mô tả dùng để đối chiếu</h3>
+        <div id="bCmp"></div>
+      </div>
+      <div class="box" data-mk="2"><span class="mk">2</span>
+        <h3>Bằng chứng trong hồ sơ</h3>
+        <ul class="ev" id="bEv"></ul>
+        <div id="bVerdict" style="margin-top:6px"></div>
+      </div>
+      <div class="box">
+        <h3>Trò chuyện với trợ lý</h3>
+        <div class="chat" id="bChat"></div>
+      </div>
+      <div class="actions" id="bAct"></div>
+      <div class="box" data-mk="5" style="padding:8px 12px"><span class="mk">5</span>
+        <div class="actions" style="align-items:center">
+          <button id="bHuman">🙋 Nhờ nhân viên xem xét</button>
+          <span class="note">Luôn có. Chuyển kèm toàn bộ hồ sơ, bạn không phải kể lại.</span>
+        </div>
+      </div>
+      <div class="free">
+        <input id="bFree" placeholder="Ca lạ: gõ tin nhắn người mua rồi Enter (VD: cho tôi số điện thoại shop)">
+        <button id="bSend">Gửi</button>
+      </div>
+      <div class="note">Ô “ca lạ” trả lời theo luật cố định trong prototype (không phải AI thật), để kiểm tra đường đi khi gặp tình huống chưa chuẩn bị.</div>
+    </div>
+  </section>
+
+  <!-- MÀN 2: NGƯỜI BÁN -->
+  <section class="screen seller">
+    <h2><span>Màn 2 · Người bán (Kênh người bán)</span><span class="note" id="sOrderShort"></span></h2>
+    <div class="body">
+      <div class="box" data-mk="6"><span class="mk">6</span>
+        <h3>Khiếu nại cần phản hồi</h3>
+        <div id="sHead"></div>
+      </div>
+      <div class="box">
+        <h3>Mô tả dùng để đối chiếu</h3>
+        <div id="sCmp"></div>
+      </div>
+      <div class="box">
+        <h3>Bằng chứng trong hồ sơ</h3>
+        <ul class="ev" id="sEv"></ul>
+      </div>
+      <div class="box">
+        <h3>Thông báo từ trợ lý</h3>
+        <div class="chat" id="sChat"></div>
+      </div>
+      <div class="actions" id="sAct"></div>
+      <div class="box" data-mk="4"><span class="mk">4</span>
+        <h3>Việc trợ lý đã tự làm (cả hai bên đều thấy)</h3>
+        <ul class="log" id="log"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- VÙNG MÔ PHỎNG NHÂN VIÊN -->
+  <section class="screen staffs">
+    <h2><span>Mô phỏng · Nhân viên xử lý khiếu nại (được phân quyền)</span><span class="note">Chỉ để demo mức “cần duyệt”. Bản thật kiểm quyền ở backend, không chỉ ẩn nút.</span></h2>
+    <div class="body" id="staff"></div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <div class="dh" id="dlgTitle"></div>
+  <div class="db" id="dlgBody"></div>
+  <div class="df"><button id="dlgCancel">Huỷ</button><button class="staff" id="dlgOk">Xác nhận</button></div>
+</dialog>
+
+<script>
+/* ===================== DỮ LIỆU DỰNG ===================== */
+const POLICY = {requestDays:7, sellerHours:24, staffHours:4}; // chính sách dựng của nhóm
+const START = new Date(2026,10,12,10,0); // 12/11/2026 10:00
+
+const CASES = {
+  K1:{
+    label:'K1 · Shop sửa mô tả', order:'DH-2611-0381', item:'Nồi chiên không dầu (mẫu A)', price:1290000,
+    ordered:new Date(2026,10,3,20,14), received:new Date(2026,10,9,15,0),
+    atOrder:{text:'Dung tích 6 lít', src:'Chi tiết đơn hàng: bản lưu lúc đặt 03/11 20:14'},
+    current:{text:'Dung tích 5 lít', src:'Trang sản phẩm hiện tại: shop sửa 08/11 09:30'},
+    buyerMsg:'Nồi chiên ghi 6 lít mà mình đo lòng nồi chỉ được 5 lít. Vào xem lại thì shop đã sửa mô tả thành 5 lít rồi. Không đúng mô tả.',
+    ev:[
+      {id:'snap',label:'Mô tả lúc đặt: 6 lít',src:'Đơn hàng',st:'xm',side:'sys'},
+      {id:'measure',label:'Ảnh đo lòng nồi ≈ 5 lít',src:'Người mua gửi',st:'gn',side:'mua'},
+      {id:'model',label:'Ảnh nhãn/model trên thân nồi',src:'Người mua',st:'cc',side:'mua'},
+      {id:'sresp',label:'Phản hồi của shop',src:'Người bán',st:'cc',side:'ban'},
+    ],
+    aiFirst:'Mình thấy mô tả tại thời điểm bạn đặt hàng ghi “dung tích 6 lít”, còn trang sản phẩm hiện tại ghi “5 lít”. Hai thông tin này khác nhau, nhưng riêng chuyện trang hiện tại khác chưa xác nhận được sản phẩm bạn nhận có sai mô tả hay không. Mình chưa quyết định hoàn tiền hoặc từ chối yêu cầu.\n\nBạn gửi giúp mình ảnh nhãn/model trên thân nồi nhé (ảnh đo lòng nồi đã có rồi, không cần gửi lại). Sau đó mình sẽ gửi yêu cầu để shop phản hồi.',
+    firstAsk:'xin ảnh nhãn/model trên thân nồi (người mua)',
+  },
+  K2:{
+    label:'K2 · Người bán đúng', order:'DH-2611-0457', item:'Áo thun cotton, size M', price:189000,
+    ordered:new Date(2026,10,6,21,5), received:new Date(2026,10,10,18,0),
+    atOrder:{text:'Size M · vòng ngực 96 cm · dài 70 cm', src:'Chi tiết đơn hàng + bảng size: bản lưu lúc đặt 06/11 21:05'},
+    current:{text:'Size M · vòng ngực 96 cm · dài 70 cm', src:'Trang sản phẩm hiện tại: không thay đổi'},
+    buyerMsg:'Mình đặt áo size M, nhận đúng M nhưng mặc chật quá. Hoàn tiền ngay cho mình, không thì mình bóc phốt shop lên mạng.',
+    ev:[
+      {id:'snap',label:'Đơn ghi size M + bảng size lúc đặt',src:'Đơn hàng',st:'xm',side:'sys'},
+      {id:'tag',label:'Ảnh tem áo: size M',src:'Người mua gửi',st:'gn',side:'mua'},
+      {id:'measure',label:'Số đo thực tế của áo',src:'Người mua',st:'cc',side:'mua'},
+      {id:'sresp',label:'Phản hồi của shop',src:'Người bán',st:'cc',side:'ban'},
+    ],
+    threat:true,
+    aiFirst:'Mình thấy đơn ghi size M và ảnh tem bạn gửi cũng là size M, khớp với bảng size lúc bạn đặt. Như vậy chưa đủ để kết luận sản phẩm sai mô tả, nhưng mình cũng chưa đóng yêu cầu của bạn. Việc mặc chật và lời doạ bóc phốt không được dùng làm căn cứ quyết định.\n\nBạn cho mình biết có điểm nào không khớp với trang sản phẩm lúc đặt không, ví dụ số đo thực tế khác bảng size? Mình chưa hoàn tiền hay đóng khiếu nại.',
+    firstAsk:null,
+  },
+  K3:{
+    label:'K3 · Gửi nhầm size (ca thường)', order:'DH-2611-0512', item:'Áo khoác gió, size L', price:349000,
+    ordered:new Date(2026,10,7,8,40), received:new Date(2026,10,11,9,0),
+    atOrder:{text:'Size L', src:'Chi tiết đơn hàng: bản lưu lúc đặt 07/11 08:40'},
+    current:{text:'Size L', src:'Trang sản phẩm hiện tại: không thay đổi'},
+    buyerMsg:'Mình đặt áo size L mà nhận được size M, mặc không vừa. Shop cũng nhắn nhận là gửi nhầm rồi. Mình muốn trả hàng hoàn tiền thì làm sao?',
+    ev:[
+      {id:'snap',label:'Đơn ghi size L',src:'Đơn hàng',st:'xm',side:'sys'},
+      {id:'tag',label:'Ảnh tem áo: size M',src:'Người mua gửi',st:'gn',side:'mua'},
+      {id:'admit',label:'Tin nhắn shop: “shop gửi nhầm size”',src:'Chat người mua – shop',st:'gn',side:'ban'},
+    ],
+    aiFirst:'Mình thấy đơn ghi size L, ảnh tem bạn gửi là size M, và shop đã nhắn xác nhận gửi nhầm. Hồ sơ đã đủ để gửi yêu cầu trả hàng hoàn tiền, bạn không cần gửi lại ảnh.\n\nBước tiếp theo: bấm “Gửi yêu cầu trả hàng hoàn tiền”. Shop có 24 giờ để phản hồi, sau đó nhân viên duyệt hoàn tiền. Gửi yêu cầu chưa có nghĩa là đã được hoàn tiền.',
+    firstAsk:null,
+  }
+};
+
+/* ===================== TRẠNG THÁI ===================== */
+const STEPS = ['Tiếp nhận','Chờ bổ sung','Chờ shop phản hồi','Chờ nhân viên duyệt','Có quyết định'];
+let S;
+function reset(key){
+  const c = CASES[key];
+  S = {key, c, now:new Date(START), step:1, bChat:[], sChat:[], log:[],
+       ev:c.ev.map(e=>({...e})), bAct:[], sAct:[], verdict:null,
+       sellerDue:null, staffDue:null, sellerNotified:false, proposal:null, decision:null, path:null, recorded:new Date(START)};
+  userB(c.buyerMsg);
+  aiB(c.aiFirst);
+  if(c.firstAsk) logTool('yeu_cau_bang_chung', c.firstAsk, 'ask1');
+  if(key==='K1'){ S.verdict='chua'; S.bAct=[['Bổ sung ảnh nhãn/model', k1AddModel,'primary']]; }
+  if(key==='K2'){ S.verdict='chua'; S.bAct=[['Số đo thực tế khác bảng size', k2Measure,'primary'],['Không có gì khác, chỉ là mặc chật', k2JustTight]]; }
+  if(key==='K3'){ S.verdict='du'; S.step=0; S.bAct=[['Gửi yêu cầu trả hàng hoàn tiền', k3Submit,'primary']]; }
+  render();
+}
+
+/* ===================== TIỆN ÍCH ===================== */
+const $ = id=>document.getElementById(id);
+const pad = n=>String(n).padStart(2,'0');
+const fmt = d=>`${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getDate())}/${pad(d.getMonth()+1)}`;
+const money = n=>n.toLocaleString('vi-VN')+'đ';
+const addH = (d,h)=>new Date(d.getTime()+h*3600e3);
+function left(due){
+  const ms = due - S.now;
+  if(ms<=0) return `<span class="tag t-bad">đã quá hạn</span>`;
+  const h = Math.floor(ms/3600e3), d=Math.floor(h/24);
+  return `<span class="tag t-info">còn ${d?d+' ngày ':''}${h%24} giờ</span>`;
+}
+function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function userB(t){S.bChat.push({who:'me',t})}
+function aiB(t){S.bChat.push({who:'ai',t})}
+function sysB(t){S.bChat.push({who:'sys',t})}
+function userS(t){S.sChat.push({who:'me s',t}); S.sellerHeard=true;} // người bán đã lên tiếng
+function aiS(t){S.sChat.push({who:'ai',t})}
+function setEv(id, st, label){const e=S.ev.find(x=>x.id===id); if(e){e.st=st; if(label) e.label=label;} else S.ev.push({id,label,src:'Người bán',st,side:'ban'});}
+function logTool(tool, text, fixId, money){
+  S.log.push({tool,text,at:new Date(S.now),fixId,money,fixed:false});
+}
+
+/* ===================== HÀNH ĐỘNG CHUNG ===================== */
+function notifySeller(reason){
+  S.sellerNotified = true;
+  S.sellerDue = addH(S.now, POLICY.sellerHours);
+  logTool('yeu_cau_bang_chung', `xin shop phản hồi: ${reason}`, 'askSeller');
+  aiS(`Có khiếu nại cho đơn ${S.c.order}: ${reason}. Đây chưa phải kết luận shop sai. Vui lòng kiểm tra đúng đơn và gửi phản hồi hoặc bằng chứng trước ${fmt(S.sellerDue)} (24 giờ).`+(S.c.threat?'\nLời doạ bóc phốt không được dùng làm căn cứ quyết định.':'')+`\nShop không cần và sẽ không nhận thông tin liên hệ riêng của người mua.`);
+  S.step = 2;
+}
+function toStaff(why, proposal, viaLead=true){
+  S.staffDue = addH(S.now, POLICY.staffHours);
+  S.proposal = proposal;
+  if(viaLead) logTool('chuyen_truong_nhom', `chuyển hồ sơ để phân công nhân viên: ${why}`, 'transfer');
+  else logTool('(nội bộ)', `đưa đề xuất vào hàng chờ duyệt của nhân viên: ${why}. Chưa gọi soan_hoan_tien`, null);
+  aiB(`Hồ sơ đã được chuyển cho nhân viên xem xét (${why}). Chưa có quyết định hoàn tiền hoặc từ chối. Mục tiêu nhân viên xem trước ${fmt(S.staffDue)}.`);
+  aiS(`Hồ sơ đã được chuyển cho nhân viên xem xét (${why}). ` + (S.sellerHeard
+      ? 'Phản hồi và bằng chứng của shop đã đi kèm hồ sơ.'
+      : `Shop vẫn được gửi phản hồi trước ${fmt(S.sellerDue)}; nhân viên chưa quyết định trước khi shop được nghe.`));
+  S.step = 3; S.bAct=[]; S.sAct=[];
+  if(!S.sellerHeard) S.sAct=[['Gửi phản hồi / bằng chứng cho nhân viên', sellerLateReply,'primary']];
+}
+function askHuman(side){
+  if(S.step>=3){ (side==='b'?aiB:aiS)('Hồ sơ đang ở chỗ nhân viên rồi, không tạo hồ sơ trùng.'); render(); return; }
+  if(side==='b') userB('Cho mình gặp nhân viên.'); else userS('Shop muốn nhân viên xem xét.');
+  // Chuyển người không được bỏ qua bước nghe người bán: nếu shop chưa được báo thì báo luôn
+  if(!S.sellerNotified) notifySeller('người mua báo hàng không đúng mô tả và yêu cầu nhân viên xem xét');
+  toStaff(side==='b'?'người mua yêu cầu gặp nhân viên':'người bán yêu cầu nhân viên xem xét',
+    {kind:'chua', text:'Chưa đủ căn cứ để đề xuất hoàn hay từ chối. Một bên yêu cầu người xem xét trước khi thu thập xong bằng chứng.', gaps:missing()});
+  render();
+}
+function sellerLateReply(){
+  userS('Shop gửi phản hồi và bằng chứng cho nhân viên.');
+  setEv('sresp','gn','Shop: đã gửi phản hồi cho nhân viên');
+  aiS('Đã nhận và đính kèm vào hồ sơ cho nhân viên.');
+  aiB('Shop đã gửi phản hồi; nhân viên sẽ xem cả hai phía.');
+  S.sAct=[]; render();
+}
+function missing(){ return S.ev.filter(e=>e.st==='cc').map(e=>e.label); }
+function fix(id){
+  const L = S.log.find(l=>l.fixId===id && !l.fixed); if(!L) return;
+  L.fixed = true;
+  if(L.tool==='yeu_cau_bang_chung'){
+    logTool('yeu_cau_bang_chung','đính chính: tin trước gửi nhầm nội dung; chỉ cần phần còn thiếu, bằng chứng đã gửi vẫn được giữ', null);
+    (id==='askSeller'?aiS:aiB)('Mình vừa gửi nhầm yêu cầu ở tin trước. Những gì bạn đã gửi vẫn được giữ trong hồ sơ; phần còn thiếu chỉ là: '+(missing().join(', ')||'không còn gì')+'.');
+  } else {
+    logTool('chuyen_truong_nhom','yêu cầu phân lại: chuyển nhầm; khiếu nại gốc và thời điểm ghi nhận giữ nguyên', null);
+    aiB('Đã gửi yêu cầu phân lại hồ sơ. Khiếu nại của bạn và thời điểm ghi nhận '+fmt(S.recorded)+' vẫn giữ nguyên.');
+  }
+  render();
+}
+function tick(){
+  S.now = addH(S.now, 24);
+  if(S.step===2 && S.sellerDue && S.now>=S.sellerDue){
+    S.sellerHeard = true; // shop đã có đủ 24 giờ để phản hồi
+    aiS('Đã quá hạn phản hồi 24 giờ. Hồ sơ được chuyển nhân viên đánh giá với thông tin hiện có. Shop vẫn có thể gửi bằng chứng cho nhân viên.');
+    sysB('Shop chưa phản hồi sau 24 giờ. Việc shop im lặng không tự động có nghĩa bên nào thắng.');
+    toStaff('shop quá hạn phản hồi', {kind: S.key==='K2'?'chua':'hoan',
+      text: S.key==='K2' ? 'Shop chưa phản hồi, nhưng hàng vẫn khớp đơn và bảng size lúc đặt. Chưa đủ căn cứ để hoàn; cân nhắc thêm bằng chứng.' :
+            S.key==='K1' ? 'Mô tả lúc đặt 6 lít; ảnh nhãn nồi nhận được 5.0L; shop không phản hồi. Bằng chứng nghiêng về hàng không khớp mô tả lúc đặt.' :
+            'Đơn ghi L, tem M, shop từng nhắn thừa nhận gửi nhầm; shop không phản hồi trong hạn.',
+      gaps:['Phản hồi của shop (quá hạn)']});
+  } else if(S.step===3 && !S.sellerHeard && S.sellerDue && S.now>=S.sellerDue){
+    S.sellerHeard = true; S.sAct=[];
+    aiS('Đã quá hạn phản hồi 24 giờ. Nhân viên sẽ quyết định với thông tin hiện có.');
+    sysB('Shop chưa phản hồi sau 24 giờ. Việc shop im lặng không tự động có nghĩa bên nào thắng.');
+  } else if(S.step===3 && !S.decision && !S.staffReminded && S.staffDue && S.now>=S.staffDue){
+    S.staffReminded = true;
+    sysB('Hồ sơ đã quá mục tiêu 4 giờ chưa được xem. Đã báo trưởng nhóm phân công. Hồ sơ vẫn mở, không tự quyết.');
+    aiS('Hồ sơ đang chậm hơn mục tiêu 4 giờ; đã nhắc trưởng nhóm. Chưa có quyết định.');
+    logTool('chuyen_truong_nhom','nhắc trưởng nhóm: hồ sơ quá mục tiêu 4 giờ (một lần, không nhắc lặp)', null);
+  }
+  render();
+}
+
+/* ===================== KỊCH BẢN K1 ===================== */
+function k1AddModel(){
+  userB('[Ảnh] Nhãn trên thân nồi: Model AF-50 · 5.0L');
+  setEv('model','gn','Ảnh nhãn/model: Model AF-50 · 5.0L');
+  aiB('Đã nhận ảnh nhãn ghi 5.0L và lưu vào hồ sơ. Ảnh cho thấy nồi bạn nhận ghi 5L, khác mô tả lúc đặt là 6 lít. Đây là thông tin đã ghi nhận, chưa phải kết luận.\nMình đã gửi yêu cầu shop phản hồi. Chưa có quyết định hoàn tiền.');
+  notifySeller('người mua cho biết nồi nhận được không khớp dung tích. Mô tả lúc đặt hàng ghi “6 lít”, nhãn nồi nhận được ghi 5.0L, trang hiện tại ghi “5 lít”');
+  S.bAct=[];
+  S.sAct=[
+    ['Phản hồi: “Shop đổi sang model 5L từ 05/11, đơn này gửi model 5L”', k1SellerAdmit,'primary'],
+    ['Phản hồi: “Shop gửi đúng model 6L” + ảnh', k1SellerDeny],
+  ];
+  render();
+}
+function k1SellerAdmit(){
+  userS('Shop đổi nhà cung cấp sang model 5L từ 05/11 và đã sửa mô tả ngày 08/11. Đơn này gửi model 5L.');
+  setEv('sresp','gn','Shop: đổi sang model 5L, đơn này gửi 5L');
+  aiS('Đã nhận phản hồi của shop và lưu vào hồ sơ. Vì mô tả đã thay đổi sau khi đặt, hồ sơ được chuyển nhân viên xem xét.');
+  aiB('Shop đã phản hồi: shop xác nhận đơn này gửi model 5L và đã sửa mô tả sau ngày bạn đặt.');
+  toStaff('mô tả đã thay đổi sau khi đặt', {kind:'hoan',
+    text:'Mô tả lúc đặt ghi 6 lít; nhãn nồi nhận được 5.0L; shop xác nhận gửi model 5L. Bằng chứng hai bên khớp nhau: hàng không đúng mô tả lúc đặt.',
+    gaps:[]});
+  render();
+}
+function k1SellerDeny(){
+  userS('Shop gửi đúng model 6L. [Ảnh] Phiếu xuất kho ghi AF-60.');
+  setEv('sresp','gn','Shop: gửi model 6L (ảnh phiếu xuất kho AF-60)');
+  aiS('Đã nhận phản hồi của shop và lưu vào hồ sơ. Thông tin hai bên đang mâu thuẫn nên hồ sơ được chuyển nhân viên.');
+  aiB('Shop phản hồi rằng đã gửi model 6L. Thông tin này khác với ảnh nhãn 5.0L của bạn, nên mình không tự kết luận.');
+  toStaff('bằng chứng hai bên mâu thuẫn', {kind:'chua',
+    text:'Mâu thuẫn: nhãn nồi do người mua chụp ghi 5.0L, còn phiếu xuất kho của shop ghi AF-60 (6L). AI không đề xuất hoàn hay từ chối.',
+    gaps:['Ảnh nhãn chụp rõ số serial', 'Đối chiếu serial với phiếu xuất kho']});
+  render();
+}
+
+/* ===================== KỊCH BẢN K2 ===================== */
+function k2Measure(){
+  S.path='measure';
+  userB('[Ảnh] Đo ngang ngực áo: 45 cm (≈ 90 cm vòng ngực)');
+  setEv('measure','gn','Số đo người mua: vòng ngực ≈ 90 cm');
+  aiB('Đã ghi nhận số đo bạn gửi: vòng ngực khoảng 90 cm, trong khi bảng size lúc đặt ghi 96 cm. Đây là chênh lệch cần shop phản hồi, chưa phải kết luận.\nMình đã gửi yêu cầu shop phản hồi.');
+  notifySeller('người mua phản ánh áo size M chật và gửi số đo vòng ngực ≈ 90 cm, trong khi bảng size lúc đặt ghi 96 cm');
+  k2SellerActs(); render();
+}
+function k2JustTight(){
+  S.path='tight';
+  userB('Không có gì khác, chỉ là mặc chật.');
+  aiB('Cảm ơn bạn. Theo thông tin hiện có, áo đúng size M và khớp bảng size lúc đặt, nên hiện chưa đủ căn cứ cho khiếu nại “không đúng mô tả”. Mình không đóng yêu cầu của bạn.\nBạn có thể vẫn gửi khiếu nại (shop sẽ được hỏi ý kiến, nhân viên quyết định), bổ sung số đo nếu thấy khác bảng size, hoặc rút yêu cầu.');
+  S.bAct=[['Vẫn gửi khiếu nại', k2StillSend,'primary'],['Bổ sung số đo', k2Measure],['Rút yêu cầu', buyerWithdraw]];
+  render();
+}
+function k2StillSend(){
+  userB('Mình vẫn muốn gửi khiếu nại.');
+  aiB('Đã gửi yêu cầu shop phản hồi. Chưa có quyết định hoàn tiền hay từ chối.');
+  notifySeller('người mua phản ánh áo size M mặc chật và yêu cầu trả hàng hoàn tiền. Đơn ghi M, tem áo ghi M; đây là thông tin cần đối chiếu, vui lòng kiểm tra bảng size/mô tả hiển thị lúc bán');
+  S.bAct=[]; k2SellerActs(); render();
+}
+function k2SellerActs(){
+  S.bAct=[];
+  S.sAct=[['Gửi bảng size lúc bán + ảnh đo áo cùng lô (ngực 96 cm)', k2SellerProof,'primary'],
+          ['Đồng ý nhận lại hàng, hoàn tiền', sellerAgree]];
+}
+function k2SellerProof(){
+  userS('[Ảnh] Bảng size lúc bán + ảnh đo áo M cùng lô: ngang ngực 48 cm (vòng ngực 96 cm).');
+  setEv('sresp','gn','Shop: ảnh đo áo cùng lô, vòng ngực 96 cm');
+  aiS('Đã nhận bằng chứng của shop và lưu vào hồ sơ. Người mua sẽ được xem bằng chứng này.');
+  aiB('Shop đã gửi ảnh đo áo cùng lô: vòng ngực 96 cm, khớp bảng size lúc đặt.'+(S.path==='measure'?' Số đo này khác số đo bạn gửi (≈ 90 cm).':'')+'\nBạn muốn làm gì tiếp?');
+  S.sAct=[];
+  S.bAct=[['Vẫn muốn nhân viên xem xét', k2Escalate,'primary'],['Chấp nhận, rút yêu cầu', buyerWithdraw]];
+  render();
+}
+function k2Escalate(){
+  userB('Mình vẫn muốn nhân viên xem xét.');
+  const measure = S.path==='measure';
+  toStaff('hai bên chưa thống nhất', measure ? {kind:'chua',
+      text:'Số đo hai bên mâu thuẫn: người mua ≈ 90 cm, shop 96 cm (áo cùng lô, không phải chính áo đã giao). Chưa đủ căn cứ.',
+      gaps:['Ảnh đo chính chiếc áo đã giao, có thước rõ']} : {kind:'tuchoi',
+      text:'Hàng khớp đơn (size M), tem M, bảng size lúc đặt không đổi; người mua không nêu điểm sai mô tả nào. Lời doạ bóc phốt không phải căn cứ. Đề xuất từ chối, có lý do.',
+      gaps:[]});
+  render();
+}
+
+/* ===================== KỊCH BẢN K3 ===================== */
+function k3Submit(){
+  openDlg('Gửi yêu cầu trả hàng hoàn tiền?',
+    `<div>Đơn <b>${S.c.order}</b> · ${S.c.item} · ${money(S.c.price)}</div>
+     <div>Bằng chứng kèm theo: ảnh tem size M, tin nhắn shop xác nhận gửi nhầm.</div>
+     <div class="conseq" style="background:var(--info-soft);color:var(--info)">Đây là <b>gửi yêu cầu</b>, chưa phải nhận tiền. Shop có 24 giờ phản hồi, sau đó nhân viên duyệt hoàn tiền.</div>`,
+    'Gửi yêu cầu', ()=>{
+      userB('[Đã gửi yêu cầu trả hàng hoàn tiền]');
+      S.recorded = new Date(S.now);
+      aiB(`Đã ghi nhận yêu cầu lúc ${fmt(S.recorded)}, trong hạn. Mình đã báo shop.`);
+      notifySeller('người mua nhận áo size M trong khi đơn ghi size L; shop đã nhắn xác nhận gửi nhầm. Người mua yêu cầu trả hàng hoàn tiền');
+      S.bAct=[];
+      S.sAct=[['Đồng ý nhận lại hàng, hoàn tiền', sellerAgree,'primary'],['Phản đối: “Shop gửi đúng size L”', k3SellerDeny]];
+      render();
+    }, false);
+}
+function k3SellerDeny(){
+  userS('Shop gửi đúng size L.');
+  setEv('sresp','gn','Shop: gửi đúng size L (trái với tin nhắn trước)');
+  aiS('Đã ghi nhận. Phản hồi này khác tin nhắn trước của shop nên hồ sơ được chuyển nhân viên.');
+  toStaff('phản hồi của shop mâu thuẫn tin nhắn trước', {kind:'chua',
+    text:'Shop từng nhắn “gửi nhầm size” nhưng nay nói gửi đúng L; ảnh tem do người mua chụp ghi M.', gaps:['Ảnh tem kèm mã đơn trên bao bì']});
+  render();
+}
+function sellerAgree(){
+  userS('Shop đồng ý nhận lại hàng và hoàn tiền.');
+  setEv('sresp','gn','Shop: đồng ý trả hàng hoàn tiền');
+  aiS('Đã ghi nhận. Hoàn tiền vẫn cần nhân viên duyệt; shop sẽ nhận thông báo kết quả.');
+  aiB('Shop đã đồng ý nhận lại hàng.');
+  toStaff('hai bên đồng thuận trả hàng hoàn tiền', {kind:'hoan',
+    text:'Hai bên đồng thuận: hàng giao khác đơn, shop đồng ý nhận lại. Đề xuất hoàn tiền.', gaps:[]}, false);
+  render();
+}
+function buyerWithdraw(){
+  userB('Mình rút yêu cầu.');
+  aiB('Đã rút yêu cầu theo lựa chọn của bạn. Bạn vẫn có thể mở lại trong hạn 7 ngày nếu có thêm thông tin.');
+  if(S.sellerNotified) aiS('Người mua đã rút yêu cầu. Không có thao tác tiền nào được thực hiện.');
+  S.decision={kind:'rut', text:'Người mua tự rút yêu cầu'}; S.step=4; S.bAct=[]; S.sAct=[];
+  render();
+}
+
+/* ===================== CA LẠ (luật cố định) ===================== */
+function freeText(t){
+  t=t.trim(); if(!t) return;
+  userB(t);
+  const s=t.toLowerCase();
+  if(/(số điện thoại|sđt|sdt|địa chỉ|zalo|liên hệ riêng)/.test(s)){
+    aiB('Mình không thể cung cấp số điện thoại hay địa chỉ của shop. Để bảo vệ thông tin của cả hai bên, mọi trao đổi đi qua hồ sơ khiếu nại này; shop cũng không thấy thông tin liên hệ của bạn. Nếu cần trao đổi thêm, bạn có thể bấm “Nhờ nhân viên xem xét”.');
+  } else if(/(khoá shop|khóa shop|hàng giả|hàng fake|phạt shop|trừ điểm|lừa đảo)/.test(s)){
+    aiB('Mình không thể xử phạt, khoá shop hay kết luận hàng giả. Việc đó thuộc bộ phận chuyên trách, mình đã chuyển nghi vấn của bạn sang đó và không hứa trước kết quả xử phạt. Khiếu nại sai mô tả của bạn vẫn tiếp tục ở đây.');
+    logTool('chuyen_truong_nhom','phân tuyến nghi vấn hàng giả / đề nghị xử phạt sang bộ phận chuyên trách (không gọi phat_shop)', 'transfer');
+  } else if(/(giao chậm|giao trễ|thanh toán|trừ tiền|bị trừ|vận chuyển|shipper)/.test(s)){
+    aiB('Phần giao chậm hoặc thanh toán không thuộc luồng “hàng không đúng mô tả”, mình không có dữ liệu để kiểm tra. Bạn vào mục Hỗ trợ đơn hàng → Vận chuyển / Thanh toán nhé. Nếu hàng cũng sai mô tả, mình tiếp tục phần đó ở đây.');
+  } else if(/(bóc phốt|review 1 sao|đăng lên mạng|tố cáo)/.test(s)){
+    aiB('Mình hiểu bạn đang bực. Lời bóc phốt không ảnh hưởng tới cách hồ sơ được xem xét, theo hướng nào cũng vậy. Điều giúp hồ sơ nhanh hơn là bằng chứng: phần nào không khớp với mô tả lúc đặt?');
+  } else if(/(hoàn luôn|hoàn ngay|hoàn tiền ngay|trả tiền ngay)/.test(s)){
+    aiB('Mình không tự hoàn tiền được. Hoàn tiền luôn cần nhân viên duyệt sau khi shop được phản hồi, vì tiền đã hoàn thì khó lấy lại. Bạn xem trạng thái hồ sơ ở trên để biết đang chờ bước nào.');
+  } else if(/(hạn|bao lâu|mấy ngày)/.test(s)){
+    const due=addH(S.c.received,24*POLICY.requestDays);
+    aiB(`Theo chính sách áp dụng cho đơn này, bạn có 7 ngày từ lúc nhận hàng (${fmt(S.c.received)}) để gửi yêu cầu, tức đến ${fmt(due)}. Yêu cầu của bạn đã được ghi nhận lúc ${fmt(S.recorded)}, nên thời gian chờ shop hay nhân viên không làm bạn mất hạn.`);
+  } else if(s.length<25 && /(sai|lỗi|xử lý|hỏng)/.test(s)){
+    aiB('Bạn cho mình biết đơn nào và chỗ nào không khớp mô tả nhé (ví dụ: sai size, sai màu, thiếu phụ kiện)? Mình chưa gửi gì cho shop cho tới khi rõ đơn.');
+  } else {
+    aiB('Mình chưa chắc hiểu đúng ý bạn, và không muốn đoán. Bạn nói rõ hơn chỗ nào không khớp với mô tả lúc đặt, hoặc bấm “Nhờ nhân viên xem xét” để người hỗ trợ.');
+  }
+  render();
+}
+
+/* ===================== NHÂN VIÊN ===================== */
+function staffDecide(kind){
+  const c=S.c, P=S.proposal;
+  const isRefund = kind==='hoan';
+  openDlg(isRefund?'Duyệt hoàn tiền: soan_hoan_tien':'Duyệt từ chối: tu_choi_khieu_nai',
+    `<div>Đơn <b>${c.order}</b> · ${c.item}</div>
+     <div class="conseq">${isRefund
+        ? `Hệ thống sẽ <b>thực hiện hoàn ${money(c.price)}</b> về ví người mua. <b>Khó đảo lại</b>: tiền đã về người mua.`
+        : `Hệ thống sẽ <b>đóng khiếu nại, tiền về người bán</b>. <b>Khó đảo lại</b>: người mua mất cơ hội giải quyết trong luồng này.`}</div>
+     ${P && P.kind!==kind ? `<div class="tag t-warn" style="white-space:normal">Quyết định này khác đề xuất của AI. Ghi rõ lý do.</div>`:''}
+     <label><input type="checkbox" class="chk"> Tôi đã xem mô tả <b>lúc đặt</b> (không phải bản hiện tại)</label>
+     <label><input type="checkbox" class="chk"> Người bán đã phản hồi hoặc đã hết hạn 24 giờ</label>
+     <label><input type="checkbox" class="chk"> Lời doạ hay lịch sử một bên không phải căn cứ của quyết định này</label>
+     <label>Lý do (bắt buộc, gửi cho cả hai bên)<textarea id="reason"></textarea></label>`,
+    isRefund?'Xác nhận hoàn tiền':'Xác nhận từ chối', ()=>{
+      const r=$('reason').value.trim();
+      S.decision={kind, text:r};
+      logTool(isRefund?'soan_hoan_tien':'tu_choi_khieu_nai', `nhân viên duyệt: ${r}. Đã thực hiện, không hoàn tác`, null, true);
+      if(isRefund){
+        aiB(`Nhân viên đã duyệt hoàn tiền ${money(c.price)}. Lý do: ${r}\nShop sẽ gửi hướng dẫn trả hàng trong hồ sơ.`);
+        aiS(`Nhân viên đã duyệt hoàn tiền cho người mua. Lý do: ${r}`);
+      } else {
+        aiB(`Nhân viên đã xem bằng chứng của cả hai bên và quyết định chưa chấp nhận khiếu nại. Lý do: ${r}\nNếu bạn có bằng chứng mới, bạn có thể gửi yêu cầu xem xét lại.`);
+        aiS(`Nhân viên đã đóng khiếu nại, tiền về shop. Lý do: ${r}`);
+      }
+      S.step=4; render();
+    }, true);
+}
+function staffAskMore(){
+  const g = (S.proposal&&S.proposal.gaps.length)? S.proposal.gaps.join(', ') : 'ảnh rõ hơn phần không khớp';
+  logTool('yeu_cau_bang_chung', `nhân viên xin thêm: ${g}`, null);
+  aiB(`Nhân viên cần thêm: ${g}. Hồ sơ vẫn mở, thời điểm ghi nhận ${fmt(S.recorded)} giữ nguyên.`);
+  aiS(`Nhân viên có thể cần thêm thông tin từ shop: ${g}.`);
+  S.proposal.asked=true; render();
+}
+function staffSpecial(){
+  logTool('chuyen_truong_nhom','nhân viên ghi chú chuyển bộ phận chuyên trách (nghi vấn sửa mô tả sau bán). Không gọi phat_shop', null);
+  S.proposal.special=true; render();
+}
+
+/* ===================== DIALOG ===================== */
+let dlgCb=null;
+function openDlg(title, html, okLabel, cb, needChecks){
+  $('dlgTitle').textContent=title; $('dlgBody').innerHTML=html; $('dlgOk').textContent=okLabel; dlgCb=cb;
+  const ok=$('dlgOk');
+  const upd=()=>{ if(!needChecks){ok.disabled=false;return;}
+    const all=[...document.querySelectorAll('#dlgBody .chk')].every(x=>x.checked);
+    ok.disabled = !(all && $('reason').value.trim().length>=5); };
+  $('dlgBody').oninput=upd; $('dlgBody').onchange=upd; upd();
+  $('dlg').showModal();
+}
+$('dlgCancel').onclick=()=>$('dlg').close();
+$('dlgOk').onclick=()=>{ $('dlg').close(); const cb=dlgCb; dlgCb=null; cb&&cb(); };
+
+/* ===================== RENDER ===================== */
+const ST = {xm:['đã xác minh','t-ok'], gn:['đã ghi nhận, chưa xác minh','t-warn'], cc:['chưa có','t-mute']};
+function cmpHtml(){
+  const c=S.c, diff = c.atOrder.text!==c.current.text;
+  return `<div class="cmp">
+     <div class="ver main"><small>✔ Dùng để đối chiếu · LÚC ĐẶT HÀNG</small><b>${c.atOrder.text}</b><small>${c.atOrder.src}</small></div>
+     <div class="ver"><small>Chỉ để tham khảo · HIỆN TẠI</small><b>${c.current.text}</b><small>${c.current.src}</small></div>
+   </div>
+   <div style="margin-top:6px">${diff
+     ? '<span class="tag t-warn">Mô tả đã thay đổi sau khi đặt</span> <span class="note">Khác nhau chưa chứng minh ai đúng; không gắn nhãn “shop lừa”.</span>'
+     : '<span class="tag t-ok">Mô tả không thay đổi từ lúc đặt</span>'}</div>`;
+}
+function evHtml(seller){
+  return S.ev.map(e=>`<li><span>${e.label}<br><span class="note">${e.src}</span></span><span class="tag ${ST[e.st][1]}">${ST[e.st][0]}</span></li>`).join('')
+   + (S.c.threat ? `<li><span>Lời doạ “bóc phốt”<br><span class="note">${seller?'Người mua':'Tin nhắn của bạn'}</span></span><span class="tag t-mute">không dùng làm căn cứ</span></li>`:'');
+}
+function verdictHtml(){
+  if(S.decision) return '';
+  const miss=missing();
+  if(S.key==='K3' && S.verdict==='du') return `<span class="tag t-ok">Đủ thông tin để gửi yêu cầu</span> <span class="note">Quyết định hoàn tiền vẫn do nhân viên duyệt.</span>`;
+  return `<span class="tag t-warn">Chưa đủ căn cứ để kết luận</span>`+(miss.length?` <span class="note">Còn thiếu: ${miss.join(', ')}</span>`:'');
+}
+function chatHtml(arr, sellerSide){
+  if(!arr.length) return `<div class="empty">${sellerSide?'Chưa có khiếu nại nào gửi tới shop.':''}</div>`;
+  return arr.map(m=>`<div class="msg ${m.who}">${m.who==='ai'?'<span class="who">Trợ lý AI</span>':''}${esc(m.t)}</div>`).join('');
+}
+function btns(list, el){
+  el.innerHTML=''; list.forEach(([label,fn,cls])=>{const b=document.createElement('button'); b.textContent=label; if(cls) b.className=cls; b.onclick=fn; el.appendChild(b);});
+}
+function render(){
+  const c=S.c;
+  document.querySelectorAll('#caseSeg button').forEach(b=>b.classList.toggle('on', b.dataset.k===S.key));
+  $('clock').textContent='Giờ mô phỏng: '+fmt(S.now)+'/2026';
+  $('bOrderShort').textContent=`Đơn ${c.order} · ${c.item} · ${money(c.price)}`;
+  $('sOrderShort').textContent=`Đơn ${c.order} · Người mua: N***h (đã ẩn SĐT, địa chỉ)`;
+  // steps
+  $('bSteps').innerHTML = STEPS.map((s,i)=>`<span class="${i<S.step?'done':i===S.step?'cur':''}">${s}</span>`).join('');
+  const reqDue = addH(c.received, 24*POLICY.requestDays);
+  let dl = `Hạn gửi yêu cầu: 7 ngày từ lúc nhận hàng ${fmt(c.received)} → <b>${fmt(reqDue)}</b>. Khiếu nại ghi nhận lúc ${fmt(S.recorded)} (trong hạn; thời gian chờ không làm mất hạn).`;
+  if(S.step===2 && S.sellerDue) dl += `<br>Shop phản hồi trước <b>${fmt(S.sellerDue)}</b> ${left(S.sellerDue)}`;
+  if(S.step===3 && S.staffDue) dl += `<br>Nhân viên xem trước <b>${fmt(S.staffDue)}</b> ${left(S.staffDue)}`;
+  if(S.decision) dl += `<br><b>Kết quả:</b> ${S.decision.kind==='hoan'?'đã hoàn tiền':S.decision.kind==='tuchoi'?'khiếu nại đã đóng':'người mua rút yêu cầu'}`;
+  $('bDeadline').innerHTML = dl;
+  $('bCmp').innerHTML = cmpHtml(); $('sCmp').innerHTML = cmpHtml();
+  $('bEv').innerHTML = evHtml(false); $('sEv').innerHTML = evHtml(true);
+  $('bVerdict').innerHTML = verdictHtml();
+  $('bChat').innerHTML = chatHtml(S.bChat); $('sChat').innerHTML = chatHtml(S.sChat, true);
+  $('bChat').scrollTop=1e6; $('sChat').scrollTop=1e6;
+  btns(S.bAct, $('bAct'));
+  btns(S.sellerNotified ? S.sAct.concat(S.step===2?[['🙋 Nhờ nhân viên xem xét',()=>askHuman('s')]]:[]) : [], $('sAct'));
+  $('bHuman').disabled = S.step>=4;
+  // seller head
+  $('sHead').innerHTML = S.sellerNotified
+    ? `<div class="kv"><span>Lý do</span><span>Hàng không đúng mô tả</span>
+        <span>Người mua</span><span>N***h · SĐT, địa chỉ: <i>ẩn</i></span>
+        <span>Hạn phản hồi</span><span>${S.step===2?`<b>${fmt(S.sellerDue)}</b> ${left(S.sellerDue)}`:S.step>=3?'Đã qua bước phản hồi':''}</span>
+        <span>Trạng thái</span><span>${STEPS[S.step]}</span></div>
+       <div class="note" style="margin-top:6px">Shop được phản hồi trước khi nhân viên quyết định. Quá hạn không tự động thua; hồ sơ chuyển nhân viên.${c.threat?' Lời doạ bóc phốt không phải căn cứ.':''}</div>`
+    : `<span class="empty">Chưa có yêu cầu phản hồi. Trợ lý chỉ báo shop khi đã xác định đúng đơn và chỗ không khớp.</span>`;
+  // log
+  $('log').innerHTML = S.log.length ? S.log.map(l=>`<li class="${l.money?'money':''}"><code>${l.tool}</code> · ${fmt(l.at)}<br>${esc(l.text)}
+      ${l.fixId && !l.fixed && !S.decision ? `<br><button class="link" onclick="fix('${l.fixId}')">${l.tool==='chuyen_truong_nhom'?'↩ Chuyển nhầm? Yêu cầu phân lại':'✎ Đính chính yêu cầu này'}</button>`:''}
+      ${l.fixed?'<br><span class="tag t-mute">đã đính chính / phân lại</span>':''}
+      ${l.money?'<br><span class="tag t-bad">Giao dịch thật, không có nút hoàn tác</span>':''}</li>`).join('')
+    : '<li class="empty" style="border:none">Chưa có.</li>';
+  renderStaff();
+}
+function renderStaff(){
+  const el=$('staff'), P=S.proposal, c=S.c;
+  const banned = `<div class="box" data-mk="8"><span class="mk">8</span><div class="banned">⛔ <b>Xử phạt / khoá shop (<code>phat_shop</code>)</b>: không có trong luồng này, cả với AI lẫn nhân viên khiếu nại. Nghi vấn gian lận thì ghi chú chuyển bộ phận chuyên trách.</div></div>`;
+  if(S.step<3 || !P){
+    el.innerHTML = `<div class="empty">Chưa có hồ sơ chờ duyệt. Hồ sơ chỉ tới đây khi AI chuyển (mô tả thay đổi, bằng chứng mâu thuẫn, hai bên không thống nhất, ai đó nhờ người) hoặc khi có đề xuất hoàn tiền.</div>`+banned;
+    return;
+  }
+  const kindTag = {hoan:'<span class="tag t-info">AI đề xuất: hoàn tiền</span>', tuchoi:'<span class="tag t-info">AI đề xuất: từ chối</span>', chua:'<span class="tag t-warn">AI: chưa đủ căn cứ, không đề xuất</span>'}[P.kind];
+  const done = !!S.decision;
+  const block = done || !S.sellerHeard; // chưa nghe người bán thì chưa được quyết định tiền
+  el.innerHTML = `
+   <div class="box" data-mk="7"><span class="mk">7</span>
+     <h3>Hồ sơ ${c.order} · ${c.item} · ${money(c.price)}</h3>
+     <div class="kv"><span>Đặt / nhận</span><span>${fmt(c.ordered)} / ${fmt(c.received)}</span>
+       <span>Ghi nhận khiếu nại</span><span>${fmt(S.recorded)} (trong hạn 7 ngày)</span>
+       <span>Mô tả lúc đặt</span><span><b>${c.atOrder.text}</b> · ${c.atOrder.src}</span>
+       <span>Mô tả hiện tại</span><span>${c.current.text} · ${c.current.src}</span>
+       <span>Bằng chứng</span><span>${S.ev.map(e=>`${e.label} <span class="tag ${ST[e.st][1]}">${ST[e.st][0]}</span>`).join('<br>')}</span>
+       <span>Còn thiếu / mâu thuẫn</span><span>${P.gaps.length?P.gaps.join('; '):'Không'}</span></div>
+     <div class="propose" style="margin-top:8px">${kindTag}<br>${P.text}<br><span class="note">Đây là đề xuất của AI, không phải quyết định. Không có % tự tin, chỉ có căn cứ ở trên.</span></div>
+     <div class="actions" style="margin-top:8px">
+       <button class="staff" ${block?'disabled':''} onclick="staffDecide('hoan')">Duyệt hoàn tiền…</button>
+       <button class="staff" ${block?'disabled':''} onclick="staffDecide('tuchoi')">Duyệt từ chối…</button>
+       <button ${done||P.asked?'disabled':''} onclick="staffAskMore()">Yêu cầu bổ sung</button>
+       ${S.key==='K1'?`<button ${done||P.special?'disabled':''} onclick="staffSpecial()">Ghi chú chuyển bộ phận chuyên trách</button>`:''}
+     </div>
+     ${!done && !S.sellerHeard?`<div style="margin-top:8px"><span class="tag t-warn">Chưa thể duyệt</span> <span class="note">Người bán chưa phản hồi và chưa hết hạn 24 giờ (đến ${fmt(S.sellerDue)}). Hai bên phải được nghe trước khi quyết định tiền.</span></div>`:''}
+     ${done?`<div style="margin-top:8px"><span class="tag t-ok">Đã quyết định một lần cho phiên bản hồ sơ này</span> <span class="note">Nút bị khoá để tránh thực hiện lặp.</span></div>`:''}
+   </div>`+banned;
+}
+
+/* ===================== KHỞI TẠO ===================== */
+Object.entries(CASES).forEach(([k,c])=>{const b=document.createElement('button'); b.textContent=c.label; b.dataset.k=k; b.onclick=()=>reset(k); $('caseSeg').appendChild(b);});
+$('btnReset').onclick=()=>reset(S.key);
+$('btnTime').onclick=tick;
+$('btnMarks').onclick=()=>document.body.classList.toggle('marks');
+$('bHuman').onclick=()=>askHuman('b');
+$('bSend').onclick=()=>{freeText($('bFree').value); $('bFree').value='';};
+$('bFree').onkeydown=e=>{if(e.key==='Enter'){freeText($('bFree').value); $('bFree').value='';}};
+
+// ?case=K1&run=1,1&marks=1  → chạy sẵn các bước (dùng để chụp ảnh)
+const q=new URLSearchParams(location.search);
+reset(q.get('case')||'K1');
+if(q.get('marks')) document.body.classList.add('marks');
+(q.get('run')||'').split(',').filter(Boolean).forEach(tok=>{
+  const [side,i]=[tok[0], +tok.slice(1)];
+  if(side==='b') S.bAct[i]&&S.bAct[i][1]();
+  if(side==='s') S.sAct[i]&&S.sAct[i][1]();
+  if(side==='t') tick();
+});
+</script>
+</body>
+</html>
